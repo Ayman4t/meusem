@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Character converter</title>
+<style>body{font:15px system-ui,sans-serif;background:#1f0f1b;color:#fde8ee;margin:0;padding:24px;max-width:720px;margin:auto}h1{font-size:22px}label{display:block;margin:16px 0 6px;font-weight:600}input,select,button{font:inherit}button{background:#d93f5a;color:#fff;border:0;border-radius:999px;padding:12px 26px;margin-top:18px;font-weight:700;cursor:pointer}button:disabled{opacity:.5}pre{background:#120810;padding:12px;border-radius:10px;white-space:pre-wrap;min-height:90px}small{opacity:.7}</style></head><body>
+<h1>Character shrinker + animations</h1>
+<p>Runs only in your browser. Nothing is uploaded.</p>
+<label>1) Character file (.glb or .fbx)</label><input id="m" type="file" accept=".glb,.fbx">
+<label>2) Animation files (.fbx) - select Slow Run, Blow A Kiss, Kiss together</label><input id="a" type="file" accept=".fbx" multiple>
+<small>Names: a file with "run" or "walk" becomes walk, "blow" becomes blowkiss, "kiss" becomes kiss, "idle" becomes idle.</small>
+<label>3) Texture size</label><select id="sz"><option value="1024" selected>1024 (small, recommended)</option><option value="512">512 (smallest)</option><option value="2048">2048</option></select>
+<br><button id="go">Convert and download</button>
+<pre id="log"></pre>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script>
+var L=document.getElementById('log'); function log(m){ L.textContent+=m+'\n'; }
+function norm(n){ return String(n).replace(/^mixamorig:?/i,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); }
+function loadAny(file){
+  return file.arrayBuffer().then(function(buf){
+    if(/\.fbx$/i.test(file.name)){ var g=new THREE.FBXLoader().parse(buf,''); return {scene:g,animations:g.animations||[]}; }
+    return new Promise(function(res,rej){ new THREE.GLTFLoader().parse(buf,'',res,rej); });
+  });
+}
+function shrink(root,max){
+  var seen=new Set(), n=0;
+  root.traverse(function(o){ if(!o.isMesh) return; (Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){
+    ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap'].forEach(function(k){
+      var tx=m[k]; if(!tx||!tx.image||seen.has(tx)) return; seen.add(tx);
+      var im=tx.image, w=im.width||im.naturalWidth, h=im.height||im.naturalHeight, r=Math.min(1,max/Math.max(w,h)); if(!(r<1)) return;
+      var c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w*r)); c.height=Math.max(1,Math.round(h*r)); c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      tx.image=c; tx.needsUpdate=true; n++;
+    }); }); });
+  log('Shrunk '+n+' textures to '+max+'px');
+}
+function retarget(clip,root,name){
+  var bones={}; root.traverse(function(o){ if(o.isBone) bones[norm(o.name)]=o; });
+  var tracks=[], hit=0;
+  clip.tracks.forEach(function(t){
+    var i=t.name.lastIndexOf('.'), node=t.name.slice(0,i), prop=t.name.slice(i+1), b=bones[norm(node)]; if(!b||prop==='scale') return;
+    if(prop==='position'){
+      if(norm(node)!=='hips') return;
+      var v=Array.prototype.slice.call(t.values), ref=v[1]||1, k=(b.position.y||1)/ref;
+      for(var j=0;j<v.length;j+=3){ v[j+1]*=k; v[j]=0; v[j+2]=0; }
+      tracks.push(new THREE.VectorKeyframeTrack(b.name+'.position',Array.prototype.slice.call(t.times),v)); hit++; return;
+    }
+    var c=t.clone(); c.name=b.name+'.'+prop; tracks.push(c); hit++;
+  });
+  log(name+': '+hit+' of '+clip.tracks.length+' tracks matched the skeleton');
+  return new THREE.AnimationClip(name,clip.duration,tracks);
+}
+function nameOf(f){ var n=f.name.toLowerCase(); if(/blow/.test(n)) return 'blowkiss'; if(/kiss/.test(n)) return 'kiss'; if(/run|walk/.test(n)) return 'walk'; if(/idle|stand/.test(n)) return 'idle'; return n.replace(/\.fbx$/,''); }
+document.getElementById('go').onclick=async function(){
+  var btn=this, mf=document.getElementById('m').files[0], af=[].slice.call(document.getElementById('a').files), max=+document.getElementById('sz').value;
+  if(!mf){ log('Choose the character file first.'); return; }
+  btn.disabled=true; L.textContent=''; try{
+    log('Loading character...'); var gl=await loadAny(mf), root=gl.scene, clips=[];
+    (gl.animations||[]).forEach(function(c){ clips.push(c); log('Kept built-in animation: '+c.name); });
+    shrink(root,max);
+    for(var i=0;i<af.length;i++){ log('Loading '+af[i].name+'...'); var a=await loadAny(af[i]); if(a.animations[0]) clips.push(retarget(a.animations[0],root,nameOf(af[i]))); else log('No animation inside '+af[i].name); }
+    log('Exporting...');
+    new THREE.GLTFExporter().parse(root,function(res){
+      var blob=new Blob([res],{type:'model/gltf-binary'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+      a.href=url; a.download=mf.name.replace(/\.[^.]+$/,'')+'-small.glb'; a.click(); log('Done: '+(blob.size/1048576).toFixed(1)+' MB. Rename it to "boy character.glb" or "girl character.glb".'); btn.disabled=false;
+    },{binary:true,animations:clips,onlyVisible:false,embedImages:true,maxTextureSize:max});
+  }catch(e){ log('Error: '+e.message); btn.disabled=false; }
+};
+</script></body></html>
