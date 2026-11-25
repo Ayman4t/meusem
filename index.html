@@ -888,6 +888,7 @@ function attachModel(av){
         m.traverse(function(o){ o.frustumCulled=false; });
         av.children.forEach(function(ch){ ch.visible=false; });
         av.add(wrap); u.model=wrap;
+        if(!(gl.animations&&gl.animations.length)) u.rig=setupRig(m,wrap);
         if(gl.animations&&gl.animations.length){
           var mx=new THREE.AnimationMixer(m); u.mixer=mx;
           function find(re){ for(var i=0;i<gl.animations.length;i++) if(re.test(gl.animations[i].name)) return gl.animations[i]; return null; }
@@ -901,6 +902,31 @@ function attachModel(av){
     },undefined,function(){ next(); });
   })();
 }
+/* No animation clips in the file: lower the arms from the T-pose and swing limbs by hand */
+function bnorm(n){ return String(n).replace(/^mixamorig:?/i,'').replace(/[^a-z0-9]/gi,'').toLowerCase(); }
+function setupRig(m,wrap){
+  var want={leftarm:'lA',rightarm:'rA',leftforearm:'lF',rightforearm:'rF',leftupleg:'lU',rightupleg:'rU',leftleg:'lK',rightleg:'rK',spine1:'sp',spine:'sp0'}, b={};
+  m.traverse(function(o){ if(o.isBone){ var k=bnorm(o.name); if(want[k]&&!b[want[k]]) b[want[k]]=o; } });
+  if(!b.lA||!b.rA||!b.lU||!b.rU) return null;
+  wrap.updateMatrixWorld(true);
+  var W=new THREE.Quaternion(), Wi; wrap.getWorldQuaternion(W); Wi=W.clone().invert();
+  var rig={b:b,P:{},R:{},ax:new THREE.Vector3(1,0,0)};
+  Object.keys(b).forEach(function(k){ var q=new THREE.Quaternion(); b[k].parent.getWorldQuaternion(q); rig.P[k]=Wi.clone().multiply(q); rig.R[k]=b[k].quaternion.clone(); });
+  function wp(o){ var v=new THREE.Vector3(); o.getWorldPosition(v); return wrap.worldToLocal(v); }
+  [['lA','lF',1],['rA','rF',-1]].forEach(function(a){
+    var arm=b[a[0]], ch=b[a[1]]; if(!arm||!ch) return;
+    var dir=wp(ch).sub(wp(arm)).normalize(), tgt=new THREE.Vector3(a[2]*.16,-1,.02).normalize();
+    var dq=new THREE.Quaternion().setFromUnitVectors(dir,tgt), P=rig.P[a[0]];
+    rig.R[a[0]]=P.clone().invert().multiply(dq).multiply(P).multiply(rig.R[a[0]]);
+    arm.quaternion.copy(rig.R[a[0]]);
+  });
+  return rig;
+}
+function rigSwing(rig,k,ang){
+  var b=rig.b[k]; if(!b) return;
+  var dq=new THREE.Quaternion().setFromAxisAngle(rig.ax,ang), P=rig.P[k];
+  b.quaternion.copy(P.clone().invert().multiply(dq).multiply(P).multiply(rig.R[k]));
+}
 function modelOnce(u,k){
   var a=u[k]; if(!a||!u.mixer||(u.shot&&u.shot.isRunning())) return;
   u.shot=a; a.reset(); a.setLoop(THREE.LoopOnce,1); a.clampWhenFinished=false; a.setEffectiveWeight(1); a.play();
@@ -912,6 +938,14 @@ function modelTick(u,dt,A,sn){
     else if(u.aWalk){ u.aWalk.setEffectiveWeight(q); u.aWalk.timeScale=A>.05?.8:0; }
     else if(u.aIdle){ u.aIdle.setEffectiveWeight(q); }
     u.mixer.update(dt);
+  } else if(u.rig){
+    var r=u.rig, cs=Math.cos(u.phase), sw=sn*.7*A, id=Math.sin(u.t*1.6)*.015*(1-A);
+    rigSwing(r,'lU',-sw); rigSwing(r,'rU',sw);
+    rigSwing(r,'lK',Math.max(0,-sw)*1.1+.02); rigSwing(r,'rK',Math.max(0,sw)*1.1+.02);
+    rigSwing(r,'lA',sw*.8+id); rigSwing(r,'rA',-sw*.8-id);
+    rigSwing(r,'lF',-.12-Math.max(0,-sw)*.4); rigSwing(r,'rF',-.12-Math.max(0,sw)*.4);
+    if(r.b.sp) rigSwing(r,'sp',.04*A+id*.5);
+    u.model.rotation.x=0;
   } else { u.model.rotation.z=sn*.03*A; u.model.rotation.x=A*.05; }
 }
 var STY_HER_OLD={skin:0xf3c9a9,hair:0x6a3f2a,top:0x2f6b57,vest:0xc9748a,trim:0xe8a3b3,bottom:0xc9748a,legs:0x5b4a52,shoe:0x7a3f28,skirt:true,turtle:true,long:true,curly:true,sc:.79,him:false};
