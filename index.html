@@ -503,7 +503,7 @@ var I18N={
   again:'Start over',look:'Look closer',listen:'🔊 Listen',sound:'Sound',lights:'Lights',guest:'✍ Guestbook',skip:'⏭ Skip to the end',shot:'📸 Save the moment',rec:'● Record',stop:'■ Stop',
   found:'Photos found',secret:'You found the secret room 🤍',need:'wait... you still have {n} photos to see 🥹',
   hintD:'Walk with W A S D, hold Shift to run. Drag to look around, scroll to zoom. Walk to the walls to see the photos.',hintT:'Drag the circle to walk, pull it to the edge to run. Drag the scene to look around. Go near a wall to see the photos.',
-  back:'Back to the museum',yes:'Yes',no:'No',make:'Make it yours',note:'Your words, photos, videos and voice notes are saved on this device only.',
+  back:'Back to the museum',yes:'Yes',no:'No',make:'Make it ours',note:'Your words, photos, videos and voice notes are saved on this device only.',
   walls:'Photos and videos on the walls',cont:'Continue',letVoice:'▶ His voice',gTitle:'Guestbook',gPlace:'Leave a note...',gAdd:'Leave note',gEmpty:'No notes yet.',
   share:'Share it',shareNote:'The link carries your text and small versions of the photos. It opens for others only when this page is hosted online.',
   copy:'Copy link',copied:'Link copied',long:'Copied. The link is long because of the photos.',needHost:'Copied, but this page is not hosted online, so the link will not open for others. Host it online first.',
@@ -515,7 +515,7 @@ var I18N={
   again:'ابدأ من الأول',look:'شوف أقرب',listen:'🔊 اسمع',sound:'الصوت',lights:'الإضاءة',guest:'✍ دفتر الزوار',skip:'⏭ روح للنهاية',shot:'📸 احفظ اللحظة',rec:'● سجّل',stop:'■ إيقاف',
   found:'الصور اللي شفتيها',secret:'لقيتي الأوضة السرية 🤍',need:'استني... لسه فاضل {n} صور متشفتيهاش 🥹',
   hintD:'امشي بأزرار W A S D، واضغط Shift عشان تجري. اسحب عشان تتفرج، والعجلة للتقريب. روح للحيطان عشان تشوف الصور.',hintT:'اسحب الدايرة عشان تمشي، واسحبها لآخرها عشان تجري. اسحب المشهد عشان تلف. قرّب من الحيط عشان تشوف الصور.',
-  back:'ارجع للمتحف',yes:'أيوه',no:'لأ',make:'خلّيه بتاعك',note:'كلامك وصورك وفيديوهاتك ورسائلك الصوتية بتتحفظ على الجهاز ده بس.',
+  back:'ارجع للمتحف',yes:'أيوه',no:'لأ',make:'خلّيه بتاعنا',note:'كلامك وصورك وفيديوهاتك ورسائلك الصوتية بتتحفظ على الجهاز ده بس.',
   walls:'الصور والفيديوهات على الحيطان',cont:'كمّل',letVoice:'▶ صوته',gTitle:'دفتر الزوار',gPlace:'اترك ملاحظة...',gAdd:'اترك ملاحظة',gEmpty:'مفيش ملاحظات لسه.',
   share:'شاركه',shareNote:'اللينك بيشيل الكلام ونسخ صغيرة من الصور، وبيفتح عند الناس بس لو الصفحة منشورة أونلاين.',
   copy:'انسخ اللينك',copied:'اتنسخ اللينك',long:'اتنسخ. اللينك طويل بسبب الصور.',needHost:'اتنسخ، بس الصفحة مش منشورة أونلاين فاللينك مش هيفتح عند حد. انشرها أونلاين الأول.',
@@ -2613,7 +2613,7 @@ function phoBuild(){
 
 /* ---- Drawing studio (shared strokes) ---- */
 var DCOLS=['#1b1519','#d93f5a','#ff8fa8','#ff9a3c','#ffd23f','#3bb273','#2fa3d9','#6b5bd2','#8a5a3c','#ffffff'];
-var STR=[], LY=document.createElement('canvas'), LYx=null, trace=null, guideOn=false, dTool='b', dCol='#d93f5a', dSize=9, cur=null, pend=[], flushT=null, drDirty=true, drSaveT=null, drNotify=0;
+var STR=[], LY=document.createElement('canvas'), LYx=null, trace=null, guideOn=true, guideCv=null, dTool='b', dCol='#d93f5a', dSize=9, cur=null, pend=[], flushT=null, drDirty=true, drSaveT=null, drNotify=0;
 LY.width=1200; LY.height=900; LYx=LY.getContext('2d');
 function cleanStroke(s,mine){
   if(!s||typeof s.id!=='string'||s.id.length>24||!Array.isArray(s.p)) return null;
@@ -2636,6 +2636,10 @@ function strokeSeg(x,s,i0){
 }
 function drRebuild(){ LYx.clearRect(0,0,1200,900); STR.forEach(function(s){ strokeSeg(LYx,s,0); }); drDirty=true; drSaveSoon(); }
 function drawGuide(x,w,h){
+  /* trace guide = the two characters (him + her) drawn exactly as they look now: skin, hair, suit/tie, dress, belt, shoes */
+  if(!guideCv){ try{ guideCv=document.createElement('canvas'); guideCv.width=1200; guideCv.height=900; var gx=guideCv.getContext('2d');
+      paintScript().forEach(function(st){ strokeSeg(gx,{k:st.k,c:st.c,w:st.w,p:st.d},0); }); }catch(e){ guideCv=null; } }
+  if(guideCv){ x.save(); x.globalAlpha=.42; x.drawImage(guideCv,0,0,w,h); x.restore(); return; }
   x.save(); x.strokeStyle='rgba(232,80,107,.38)'; x.lineWidth=w*.004; x.setLineDash([w*.012,w*.01]);
   [.37,.63].forEach(function(f,i){ var cx=w*f, hy=h*.27, r=w*.062; x.beginPath(); x.arc(cx,hy,r,0,6.3); x.stroke(); var bw=w*(i?.1:.11); roundRect(x,cx-bw,hy+r+h*.02,bw*2,h*.48,w*.045); x.stroke(); });
   heartPath(x,w/2,h*.4,w*.045); x.stroke(); x.restore();
@@ -2663,7 +2667,7 @@ drCv.addEventListener('pointerup',drEnd); drCv.addEventListener('pointercancel',
 function drUndo(){ for(var i=STR.length-1;i>=0;i--) if(STR[i].mine){ var id=STR[i].id; STR.splice(i,1); send({t:'dru',id:id}); drRebuild(); return; } }
 function drClear(){ if(!STR.length) return; if(!window.confirm(rmt('confirmC'))) return; STR=[]; send({t:'drc'}); drRebuild(); }
 function drSave(){ var c=document.createElement('canvas'); c.width=1200; c.height=900; composite(c.getContext('2d'),1200,900,false); c.toBlob(function(b){ if(b){ download(b,'our-drawing.png'); toast(rmt('saved')); } },'image/png'); }
-function drBuild(){
+function drBuild(){ guideCv=null;
   $('drT').textContent=rmt('dTitle'); $('drX').textContent=rmt('close'); $('drSt').textContent=linked?rmt('withU'):rmt('alone');
   function RB(par,txt,on,fn){ var b=document.createElement('button'); b.type='button'; b.className='rb'+(on?' on':''); b.textContent=txt; b.addEventListener('click',fn); par.appendChild(b); return b; }
   var r1=$('drR1'); r1.innerHTML='';
