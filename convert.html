@@ -4,7 +4,7 @@
 <p>Runs only in your browser. Nothing is uploaded.</p>
 <label>1) Character file (.glb or .fbx)</label><input id="m" type="file" accept=".glb,.fbx">
 <label>2) Animation files (.fbx) - select Slow Run, Blow A Kiss, Kiss together</label><input id="a" type="file" accept=".fbx" multiple>
-<small>Names: a file with "run" or "walk" becomes walk, "blow" becomes blowkiss, "kiss" becomes kiss, "idle" becomes idle.</small>
+<small>Names: "walk" becomes walk, "run" becomes run, "blow" becomes blowkiss, "kiss" becomes kiss, "idle" becomes idle.</small>
 <label>3) Texture size</label><select id="sz"><option value="1024" selected>1024 (small, recommended)</option><option value="512">512 (smallest)</option><option value="2048">2048</option></select>
 <br><button id="go">Convert and download</button>
 <pre id="log"></pre>
@@ -49,7 +49,7 @@ function retarget(clip,root,name){
   log(name+': '+hit+' of '+clip.tracks.length+' tracks matched the skeleton');
   return new THREE.AnimationClip(name,clip.duration,tracks);
 }
-function nameOf(f){ var n=f.name.toLowerCase(); if(/blow/.test(n)) return 'blowkiss'; if(/kiss/.test(n)) return 'kiss'; if(/run|walk/.test(n)) return 'walk'; if(/idle|stand/.test(n)) return 'idle'; return n.replace(/\.fbx$/,''); }
+function nameOf(f){ var n=f.name.toLowerCase(); if(/blow/.test(n)) return 'blowkiss'; if(/kiss/.test(n)) return 'kiss'; if(/walk/.test(n)) return 'walk'; if(/run/.test(n)) return 'run'; if(/idle|stand/.test(n)) return 'idle'; return n.replace(/\.fbx$/,''); }
 document.getElementById('go').onclick=async function(){
   var btn=this, mf=document.getElementById('m').files[0], af=[].slice.call(document.getElementById('a').files), max=+document.getElementById('sz').value;
   if(!mf){ log('Choose the character file first.'); return; }

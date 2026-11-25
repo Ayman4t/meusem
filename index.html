@@ -891,7 +891,7 @@ function attachModel(av){
         if(gl.animations&&gl.animations.length){
           var mx=new THREE.AnimationMixer(m); u.mixer=mx;
           function find(re){ for(var i=0;i<gl.animations.length;i++) if(re.test(gl.animations[i].name)) return gl.animations[i]; return null; }
-          var cw=find(/walk|run/i), ci=find(/idle|stand|breath/i)||(!cw?gl.animations[0]:null);
+          var cw=find(/walk/i)||find(/run/i), ci=find(/idle|stand|breath/i)||(!cw?gl.animations[0]:null);
           if(cw){ u.aWalk=mx.clipAction(cw); u.aWalk.timeScale=.8; u.aWalk.play(); u.aWalk.setEffectiveWeight(0); }
           var cb=find(/blow/i), ck=null; gl.animations.forEach(function(a){ if(!ck&&/kiss/i.test(a.name)&&!/blow/i.test(a.name)) ck=a; });
           if(cb) u.aBlow=mx.clipAction(cb); if(ck) u.aKiss=mx.clipAction(ck);
