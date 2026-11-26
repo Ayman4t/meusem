@@ -3209,6 +3209,7 @@ function roomsTick(dt,now){
   if(albumDirty){ albumDirty=false; drawAlbumWall(); }
   if(drDirty){ drDirty=false; composite(drawWallX,1024,768,false); drawWallTex.needsUpdate=true; if(window.drawOpen) composite(drCx,1200,900,true); }
 }
+
 loadAlbum(); loadStrokes();
 
 requestAnimationFrame(frame);
