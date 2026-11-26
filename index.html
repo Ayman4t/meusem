@@ -2546,7 +2546,14 @@ var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4
 /* CC0 cues from plinkfx, loaded from its pinned CDN release. */
 var REACT_SFX={wave:'whoosh',heart:'heart',kiss:'harp',clap:'click-soft',cheer:'victory',laugh:'voice-babble',cry:'water-drop',dance:'harp',jump:'jump',shy:'sparkle',flower:'bird-chirp',wow:'level-up',hand:'heart',sit:'land',paint:'click'};
 var REACT_REAL={wave:['wave_swoosh',.7],heart:['pop',.5],kiss:['kiss',.7],clap:['clap',.6],cheer:['yay',.5],laugh:['slide_whistle',.45],cry:['splash',.45],dance:['tada',.4],jump:['land',.5],shy:['ding',.3],flower:['bird',.4],wow:['ding',.45],hand:['bell',.3],sit:['sit',.55],paint:['pop',.4]};
-function playReactSound(n){ var r=REACT_REAL[n]; if(r&&playReal(r[0],r[1],function(){ playReactSynth(n); })) return; playReactSynth(n); }
+function sayHi(){
+  if(sfxMuted) return true;
+  try{ var ss=window.speechSynthesis; if(!ss||!window.SpeechSynthesisUtterance) return false; var ar=(typeof LANG!=='undefined'&&LANG==='ar');
+    ss.cancel(); var u=new SpeechSynthesisUtterance(ar?'\u0645\u0631\u062d\u0628\u0627':'Hi!'); u.lang=ar?'ar-SA':'en-US'; u.rate=1.05; u.pitch=1.05; u.volume=.8;
+    var vs=ss.getVoices()||[], pick=vs.filter(function(v){ return v.lang&&v.lang.toLowerCase().indexOf(u.lang.slice(0,2))===0; }); if(pick.length) u.voice=pick[0];
+    ss.speak(u); return true; }catch(e){ return false; }
+}
+function playReactSound(n){ if(n==='wave'&&sayHi()) return; var r=REACT_REAL[n]; if(r&&playReal(r[0],r[1],function(){ playReactSynth(n); })) return; playReactSynth(n); }
 function playReactSynth(n){ var cue=REACT_SFX[n]; if(!cue) return;
   var notes={wave:[79,84],heart:[72,76,79],kiss:[84,88],clap:[76,80],cheer:[76,80,84],laugh:[79,83],cry:[67,71],dance:[72,76,79],jump:[79,84],shy:[72,76],flower:[79,84,88],wow:[76,83,88],hand:[72,76],sit:[60,67],paint:[76,79]};
   chime(notes[n]||[76,80,84],.08,.075);
