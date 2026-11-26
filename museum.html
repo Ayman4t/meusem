@@ -15,7 +15,7 @@
   <iframe id="museumApp" title="Museum of Love" allow="autoplay; camera; microphone; fullscreen; clipboard-write"></iframe>
   <script>
     var appUrl=new URL('index.html',location.href);
-    appUrl.searchParams.set('museum','1');
+    appUrl.searchParams.set('museum','1'); appUrl.searchParams.set('v',String(Date.now()));
     appUrl.hash=location.hash;
     document.getElementById('museumApp').src=appUrl.href;
   </script>
