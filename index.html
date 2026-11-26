@@ -1088,12 +1088,12 @@ function makeAvatar(o){
     var sh=new THREE.Group(); sh.position.set(x,1.46,0);
     part(sh,new THREE.CylinderGeometry(.075,.065,.3,12),top,0,-.14,0,1,1,1,1.1); part(sh,SPH(.068),top,0,-.29,0,1,1,1,1.1);
     var el=new THREE.Group(); el.position.set(0,-.29,0); sh.add(el);
-    part(el,new THREE.CylinderGeometry(.065,.055,.3,12),top,0,-.14,0,1,1,1,1.1); var hand=new THREE.Group(); hand.position.set(0,-.31,0); el.add(hand);
+    var forearm=part(el,new THREE.CylinderGeometry(.065,.055,.3,12),top,0,-.14,0,1,1,1,1.1); var hand=new THREE.Group(); hand.position.set(0,-.31,0); el.add(hand);
     part(hand,SPH(.068),skin,0,-.012,0,1.15,.95,.75,1.1);
     function fin(px,py,pz,len,rx,rz,r){ var fg=new THREE.Group(); fg.position.set(px,py,pz); fg.rotation.set(rx,0,rz); hand.add(fg); part(fg,new THREE.CylinderGeometry(r,r*.86,len,8),skin,0,-len/2,0,1,1,1,1.12); part(fg,SPH(r*.92),skin,0,-len,0,1,1,1,1.12); return fg; }
     [[-.056,.046,.012],[-.019,.056,.016],[.019,.052,.016],[.056,.042,.012]].forEach(function(f,i){ fin(f[0],-.045,0,f[1]*1.5*(Wm?.95:1),-.25-(i%2)*.06,(i-1.5)*.06,.0175); });
     var inn=x>0?-1:1; fin(inn*.07,-.02,.035,.06,-.35,inn*.75,.019);
-    sh.scale.set(Wm?.66:.8,.8,Wm?.66:.8); up.add(sh); return {sh:sh,el:el,hand:hand};
+    sh.scale.set(Wm?.66:.8,.8,Wm?.66:.8); up.add(sh); return {sh:sh,el:el,hand:hand,forearm:forearm};
   }
   var lx=Wm?.1:.095, ax=Wm?.262:.285, lL=leg(-lx),lR=leg(lx),aL=arm(-ax),aR=arm(ax);
   if(Wm){ var tp=[[0,-.31],[.19,-.31],[.205,-.26],[.19,-.17],[.158,-.07],[.148,-.02],[.158,.07],[.18,.15],[.186,.2],[.17,.27],[.12,.3],[.06,.31],[0,.31]].map(function(p){ return new THREE.Vector2(p[0],p[1]); });
@@ -1114,7 +1114,7 @@ function makeAvatar(o){
   part(suitG,new THREE.BoxGeometry(.05,.04,.018),tieM,0,1.4,.222,1,1,1,0);
   [-1,1].forEach(function(ls){ var lp=part(suitG,new THREE.BoxGeometry(.05,.3,.018),topD,ls*.062,1.3,.205,1,1,1,0); lp.rotation.z=ls*.28; });
   part(suitG,new THREE.CylinderGeometry(.196,.23,.07,20),topD,0,1.0,0,1,1,1,1.04); suitG.visible=!!o.suit;
-  if(o.belt){ if(Wm) part(up,new THREE.CylinderGeometry(.152,.152,.03,18),beltM,0,1.14,0,1,1,.9,1.05); else part(up,new THREE.CylinderGeometry(.22,.22,.035,18),mat(o.belt),0,.86,0,1,1,1,1.03); }
+  var beltMesh=null; if(o.belt){ if(Wm) beltMesh=part(up,new THREE.CylinderGeometry(.152,.152,.03,18),beltM,0,1.14,0,1,1,.9,1.05); else beltMesh=part(up,new THREE.CylinderGeometry(.22,.22,.035,18),mat(o.belt),0,.86,0,1,1,1,1.03); }
   var skirtM=null,pantsHip=null;
   if(Wm){ skirtM=part(g,new THREE.CylinderGeometry(.22,.4,.42,24),bottom,0,.74,0,1,1,1,1.03); skirtM.visible=!!o.skirt;
     pantsHip=part(up,new THREE.CylinderGeometry(.18,.215,.28,18),bottom,0,.8,0,1,1,1,1.04); pantsHip.visible=!o.skirt; }
@@ -1199,7 +1199,7 @@ function makeAvatar(o){
   ring.scale.setScalar(1.15);
   aR.el.add(ring);
   var shd=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:radialTex('rgba(0,0,0,.5)','rgba(0,0,0,0)'),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,fog:false})); shd.rotation.x=-Math.PI/2; shd.position.y=.035/(o.sc||.82); shd.renderOrder=2; g.add(shd);
-  g.userData={legL:lL.th,kneeL:lL.sh,legR:lR.th,kneeR:lR.sh,armL:aL.sh,elL:aL.el,armR:aR.sh,elR:aR.el,handL:aL.hand,handR:aR.hand,face:FACE,fd:0,ring:ring,lid:lidG,spark:rSpark,mats:{skin:skin,top:top,topD:topD,bottom:bottom,legs:legM,hair:hair,shoe:shoe,iris:irisM,tie:tieM,belt:beltM,trim:trim,vest:vestM},outfitMeshes:{suit:suitG,vest:vestG},pantsHip:pantsHip,hip:hip,up:up,hd:hd,hairFlower:hairFlower,hairFlowerTarget:new THREE.Vector3(hairFlower.position.x,hairFlower.position.y,hairFlower.position.z),carriedFlower:carriedFlower,dy:hy-(Wm?.77:.74),seatY:.5-(hy-(Wm?.175:.15))*(o.sc||.82),phase:0,amp:0,t:Math.random()*10,lastStep:0,hair:hairBack,hr:0,sc:o.sc||.82,him:!!o.him,skirt:skirtM};
+  g.userData={legL:lL.th,kneeL:lL.sh,legR:lR.th,kneeR:lR.sh,armL:aL.sh,elL:aL.el,armR:aR.sh,elR:aR.el,handL:aL.hand,handR:aR.hand,forearms:[aL.forearm,aR.forearm],face:FACE,fd:0,ring:ring,lid:lidG,spark:rSpark,mats:{skin:skin,top:top,topD:topD,bottom:bottom,legs:legM,hair:hair,shoe:shoe,iris:irisM,tie:tieM,belt:beltM,trim:trim,vest:vestM},outfitMeshes:{suit:suitG,vest:vestG},beltMesh:beltMesh,pantsHip:pantsHip,hip:hip,up:up,hd:hd,hairFlower:hairFlower,hairFlowerTarget:new THREE.Vector3(hairFlower.position.x,hairFlower.position.y,hairFlower.position.z),carriedFlower:carriedFlower,dy:hy-(Wm?.77:.74),seatY:.5-(hy-(Wm?.175:.15))*(o.sc||.82),phase:0,amp:0,t:Math.random()*10,lastStep:0,hair:hairBack,hr:0,sc:o.sc||.82,him:!!o.him,skirt:skirtM};
   var kS=o.slim||1; g.scale.set((o.sc||.82)*kS,(o.sc||.82),(o.sc||.82)*kS); hd.scale.set((Wm?1.02:1.07)/kS,(Wm?1.02:1.07),(Wm?1.02:1.07)/kS); scene.add(g); AV.push(g); return g;
 }
 var STY_HER_OLD={skin:0xf3c9a9,hair:0x6a3f2a,top:0x2f6b57,vest:0xc9748a,trim:0xe8a3b3,bottom:0xc9748a,legs:0x5b4a52,shoe:0x7a3f28,skirt:true,turtle:true,long:true,curly:true,sc:.79,him:false};
@@ -1410,28 +1410,34 @@ var LK_OUTFITS={
   him:[
     {key:'suit',icon:'🤵',en:'Suit & tie',ar:'بدلة وكرافتة',colors:{top:0x1c2a4a,bottom:0x16171d,accent:0x7a1830,vest:0x1c2a4a}},
     {key:'vest',icon:'🦺',en:'Waistcoat',ar:'صديري أنيق',colors:{top:0xf0e7d8,bottom:0x253247,accent:0xd9b25e,vest:0x6a2941}},
-    {key:'casual',icon:'👕',en:'Casual',ar:'كاجوال',colors:{top:0x327b73,bottom:0xd2b98f,accent:0x1c2a4a,vest:0x327b73}}
+    {key:'casual',icon:'👕',en:'Casual',ar:'كاجوال',colors:{top:0x327b73,bottom:0x26394c,accent:0x1c2a4a,vest:0x327b73}}
   ],
   her:[
     {key:'dress',icon:'👗',en:'Evening dress',ar:'فستان سهرة',colors:{top:0x1f6a55,bottom:0x1f6a55,accent:0xd9b25e,vest:0xe8b4bc,pants:0x33263f}},
     {key:'vest',icon:'🧥',en:'Vest & skirt',ar:'صديري وتنورة',colors:{top:0xf1d5c9,bottom:0x1f6a55,accent:0xd9b25e,vest:0x8a3347,pants:0x33263f}},
-    {key:'trousers',icon:'👖',en:'Blouse & trousers',ar:'بلوزة وبنطلون',colors:{top:0xc8a4d8,bottom:0x33263f,accent:0xd9b25e,vest:0x8a3347,pants:0x33263f}}
+    {key:'casual',icon:'👕',en:'Casual',ar:'كاجوال',colors:{top:0xf1d5c9,bottom:0x293b52,accent:0xd9b25e,vest:0x8a3347,pants:0x293b52}}
   ]
 };
 function lkSetOutfit(w,o){ CUST[w].outfit=o.key; Object.keys(o.colors).forEach(function(k){ CUST[w][k]=o.colors[k]; }); }
 function lkSave(){ try{ localStorage.setItem('ourMuseumLook',JSON.stringify(CUST)); }catch(e){} }
+var outfitMigrated=false;
+if(CUST.him.outfit==='casual'&&CUST.him.bottom===0xd2b98f){ CUST.him.bottom=0x26394c; outfitMigrated=true; }
+if(CUST.her.outfit==='trousers'){ CUST.her.outfit='casual'; if(CUST.her.bottom===0x33263f) CUST.her.bottom=0x293b52; if(CUST.her.pants===0x33263f) CUST.her.pants=0x293b52; outfitMigrated=true; }
+if(outfitMigrated) lkSave();
 function setCM(m,c){ if(!m) return; m.color.set(c); if(m.emissive&&m.emissiveIntensity>0&&!m.isMeshBasicMaterial) m.emissive.set(c); }
 function applyLook(av){
   var u=av.userData, m=u.mats; if(!m) return;
   var st=mergeLook(u.him?STY_HIM:STY_HER);
-  var outfit=st.outfit||(u.him?'suit':'dress'), outfitMeshes=u.outfitMeshes||{};
+  var outfit=st.outfit||(u.him?'suit':'dress'), outfitMeshes=u.outfitMeshes||{}, pantsLook=!u.him&&(outfit==='trousers'||outfit==='casual'), casualLook=outfit==='casual';
   setCM(m.skin,st.skin); setCM(m.top,st.top); setCM(m.topD,st.top); m.topD.color.multiplyScalar(.72); m.topD.emissive.copy(m.topD.color);
-  setCM(m.bottom,st.bottom); setCM(m.legs,u.him?st.bottom:(outfit==='trousers'?(st.pants||0x33263f):st.legs)); setCM(m.vest,st.vest!=null?st.vest:st.top); setCM(m.hair,st.hair); setCM(m.shoe,st.shoe); m.iris.color.set(st.eye);
+  setCM(m.bottom,st.bottom); setCM(m.legs,u.him?st.bottom:(pantsLook?(st.pants||0x33263f):st.legs)); setCM(m.vest,st.vest!=null?st.vest:st.top); setCM(m.hair,st.hair); setCM(m.shoe,st.shoe); m.iris.color.set(st.eye);
+  (u.forearms||[]).forEach(function(a){ a.material=casualLook?m.skin:m.top; });
   if(u.him){ setCM(m.tie,st.accent!=null?st.accent:0x7a1830); } else { setCM(m.belt,st.belt); setCM(m.trim,st.accent!=null?st.accent:st.trim); }
   if(outfitMeshes.suit) outfitMeshes.suit.visible=!!u.him&&outfit==='suit';
   if(outfitMeshes.vest) outfitMeshes.vest.visible=u.him?outfit==='vest':outfit==='vest';
-  if(u.skirt) u.skirt.visible=!u.him&&outfit!=='trousers';
-  if(u.pantsHip) u.pantsHip.visible=!u.him&&outfit==='trousers';
+  if(u.skirt) u.skirt.visible=!u.him&&!pantsLook;
+  if(u.pantsHip) u.pantsHip.visible=pantsLook;
+  if(u.beltMesh) u.beltMesh.visible=!pantsLook;
 }
 function applyLookAll(){ AV.forEach(applyLook); }
 /* her details colour: store accent into belt+trim */
@@ -1475,7 +1481,12 @@ function lkBuild(){
     b.addEventListener('click',function(){ lkSetOutfit(lkWho,o); lkSave(); applyLookAll(); lkBuild(); }); outfits.appendChild(b); });
   outfitRow.appendChild(outfits); box.appendChild(outfitRow);
   LK_ROWS[lkWho].forEach(function(r){
-    var row=document.createElement('div'); row.className='lk-row'; var h=document.createElement('h4'); h.textContent=ar?r[4]:r[3]; row.appendChild(h);
+    if(lkWho==='him'&&((r[0]==='outer'&&activeOutfit!=='vest')||(r[0]==='accent'&&activeOutfit!=='suit'))) return;
+    if(lkWho==='her'&&((r[0]==='outer'&&activeOutfit!=='vest')||(r[0]==='pants'&&activeOutfit!=='casual'&&activeOutfit!=='trousers')||(r[0]==='accent'&&activeOutfit==='casual'))) return;
+    var row=document.createElement('div'); row.className='lk-row'; var h=document.createElement('h4'), rowLabel=ar?r[4]:r[3];
+    if(lkWho==='him'){ if(r[0]==='jacket') rowLabel=activeOutfit==='casual'?(ar?'تيشيرت':'T-shirt'):activeOutfit==='vest'?(ar?'القميص':'Shirt'):(ar?'الجاكيت':'Jacket'); if(r[0]==='pants'&&activeOutfit==='casual') rowLabel=ar?'جينز':'Jeans'; }
+    if(lkWho==='her'&&r[0]==='dress'&&activeOutfit==='casual') rowLabel=ar?'البلوزة':'Blouse';
+    h.textContent=rowLabel; row.appendChild(h);
     var sw=document.createElement('div'); sw.className='lk-sw'; var cur=st[r[1][0]]; if(r[0]==='accent'&&lkWho==='her') cur=CUST.her.accent!=null?CUST.her.accent:STY_HER.belt; if(r[0]==='accent'&&lkWho==='him'&&cur==null) cur=0x7a1830;
     LK_PAL[r[2]].forEach(function(c){ var b=document.createElement('button'); b.style.background=hex(c); b.setAttribute('aria-label',hex(c)); b.title=hex(c); if(c===cur) b.className='on';
       b.addEventListener('click',function(){ r[1].forEach(function(k){ CUST[lkWho][k]=c; }); lkSave(); applyLookAll(); lkBuild(); }); sw.appendChild(b); });
