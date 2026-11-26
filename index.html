@@ -860,6 +860,12 @@ var sheenTex=(function(){
   x.fillStyle=r; x.fillRect(0,0,64,128);
   return canvasTex(c);
 })();
+var sweepTex=(function(){
+  var c=document.createElement('canvas'); c.width=64; c.height=128; var x=c.getContext('2d');
+  var gx=x.createLinearGradient(0,0,64,0); gx.addColorStop(0,'rgba(255,245,230,0)'); gx.addColorStop(.3,'rgba(255,245,230,.08)'); gx.addColorStop(.5,'rgba(255,245,230,.72)'); gx.addColorStop(.7,'rgba(255,245,230,.08)'); gx.addColorStop(1,'rgba(255,245,230,0)');
+  var gy=x.createLinearGradient(0,0,0,128); gy.addColorStop(0,'rgba(255,255,255,0)'); gy.addColorStop(.18,'rgba(255,255,255,1)'); gy.addColorStop(.82,'rgba(255,255,255,1)'); gy.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=gy; x.fillRect(0,0,64,128); x.globalCompositeOperation='destination-in'; x.fillStyle=gx; x.fillRect(0,0,64,128); return canvasTex(c);
+})();
 function sheenMat(op){ var m=additive(sheenTex); m.opacity=op; m.polygonOffset=true; m.polygonOffsetFactor=-2; m.polygonOffsetUnits=-2; return m; }
 function sheenPlane(w,h,z,op){ var m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),sheenMat(op)); m.position.z=z; m.renderOrder=2; return m; }
 
@@ -960,13 +966,15 @@ function drawPlaque(i){
     var cw=FW+.2, ch=FH+.2;
     var sheenP=sheenPlane(cw,ch,.054,.8); g.add(sheenP);
     var sheenC=sheenPlane(cw,ch,.064,1); g.add(sheenC);
+    var sweep=new THREE.Mesh(new THREE.PlaneGeometry(.42,ch),new THREE.MeshBasicMaterial({map:sweepTex,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    sweep.position.set(-1.05,0,.072); sweep.renderOrder=3; g.add(sweep);
     var doors=new THREE.Group(); doors.position.z=.06; doors.visible=false; g.add(doors);
     var doorMat=new THREE.MeshBasicMaterial({map:ctx2,transparent:true,side:THREE.DoubleSide});
     var doorL=new THREE.Group(); doorL.position.x=-cw/2; var dml=new THREE.Mesh(halfGeo(cw,ch,false),doorMat); dml.position.x=cw/4; doorL.add(dml);
     var doorR=new THREE.Group(); doorR.position.x=cw/2; var dmr=new THREE.Mesh(halfGeo(cw,ch,true),doorMat); dmr.position.x=-cw/4; doorR.add(dmr);
     doors.add(doorL); doors.add(doorR);
     frames.push({ccanvas:cc2,ctex:ctx2,cover:cover,open:false,opening:false,openT:0,canvas:c,ctx:c.getContext('2d'),tex:tx,img:null,x:s.x,z:s.z,group:g,photo:photo,pcanvas:pc,pctx:pc.getContext('2d'),ptex:ptx,video:null,vtex:null});
-    var fo=frames[frames.length-1]; fo.doors=doors; fo.doorL=doorL; fo.doorR=doorR; fo.doorMat=doorMat; fo.sheenP=sheenP; fo.sheenC=sheenC;
+    var fo=frames[frames.length-1]; fo.doors=doors; fo.doorL=doorL; fo.doorR=doorR; fo.doorMat=doorMat; fo.sheenP=sheenP; fo.sheenC=sheenC; fo.sweep=sweep;
     drawFrame(i); drawPlaque(i); coverArt(i);
   });
 })();
@@ -1781,7 +1789,9 @@ function frame(now){
   tvDraw(now);
 
   /* video textures update only while playing */
-  frames.forEach(function(f){ if(f.video&&!f.video.paused) f.vtex.needsUpdate=true;
+  frames.forEach(function(f,i){ if(f.video&&!f.video.paused) f.vtex.needsUpdate=true;
+    var phase=(now*.00012+i*.23)%1; f.sweep.position.x=-1.05+phase*2.1; f.sweep.material.opacity=.42*Math.sin(phase*Math.PI);
+    if(!f.opening) f.sheenP.material.opacity=.72+.08*(.5+.5*Math.sin(now*.00075+i*1.1));
     if(f.opening) updateCoverOpen(f,dt); });
   couponMesh.position.y=1.45+Math.sin(now*.0015)*.05; couponMesh.rotation.y=Math.PI/2+Math.sin(now*.0008)*.25;
   twinkles.forEach(function(s){ s.material.color.setRGB(1,.85+Math.sin(now*.003+s.userData.ph)*.1,.55+Math.sin(now*.004+s.userData.ph)*.2); });
@@ -2281,7 +2291,7 @@ function sitToggle(){ if(state!=='explore') return; if(seat){ standUp(); return;
   if(!best){ toast(LANG==='ar'?'قرّبي من أي دكة الأول':'Walk up to a bench first',2200); return; } seat=best; vx=vz=0; }
 function doWave(){ doReact('wave'); }
 function doHeart(){ doReact('heart'); }
-var stl=document.createElement('style'); stl.textContent='#emotes{position:absolute;z-index:26;inset-inline-end:max(12px,env(safe-area-inset-right,0px));bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 54px);display:flex;flex-direction:column;gap:8px}#emotes button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(20,18,23,.7);backdrop-filter:blur(8px);font-size:20px;padding:0}.emote{position:absolute;left:0;top:0;will-change:transform}.emote span{display:block;font-size:30px;animation:emRise 2.2s ease-out forwards}@keyframes emRise{0%{opacity:0;transform:translateY(8px) scale(.5)}15%{opacity:1;transform:translateY(0) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}body.garden #ask{background:linear-gradient(to bottom,rgba(40,15,50,.5) 0,rgba(40,15,50,0) 40%,rgba(40,15,50,.35) 100%)}';
+var stl=document.createElement('style'); stl.textContent='#emotes{position:absolute;z-index:26;inset-inline-end:max(12px,env(safe-area-inset-right,0px));bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 54px);display:flex;flex-direction:column;gap:8px}#emotes button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(20,18,23,.7);backdrop-filter:blur(8px);font-size:20px;padding:0}#emotes .tray button:disabled{opacity:.32;filter:grayscale(1);cursor:not-allowed}.emote{position:absolute;left:0;top:0;will-change:transform}.emote span{display:block;font-size:30px;animation:emRise 2.2s ease-out forwards}@keyframes emRise{0%{opacity:0;transform:translateY(8px) scale(.5)}15%{opacity:1;transform:translateY(0) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}body.garden #ask{background:linear-gradient(to bottom,rgba(40,15,50,.5) 0,rgba(40,15,50,0) 40%,rgba(40,15,50,.35) 100%)}';
 document.head.appendChild(stl);
 var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stage.appendChild(emEl);
 /* put the React button in one row with the sound button (top bar) */
@@ -2293,20 +2303,23 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
   '#topRow #emotes .tray{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:30}#topRow #tMusic{pointer-events:auto}';
   document.head.appendChild(st); })();
 var REACTS=['wave','heart','kiss','clap','cheer','laugh','cry','dance','jump','shy','flower','wow','hand','sit'];
-var RLAB={en:{wave:'Wave',heart:'Heart hands',kiss:'Blow a kiss',clap:'Clap',cheer:'Cheer',laugh:'Laugh',cry:'Cry',dance:'Dance',jump:'Jump',shy:'Shy',flower:'Put a flower in her hair',wow:'Wow',hand:'Hold hands',sit:'Sit',main:'React'},ar:{wave:'لوّح',heart:'قلب بإيديكي',kiss:'ابعتي بوسة',clap:'صفّقي',cheer:'هلّلي',laugh:'اضحكي',cry:'عيّطي',dance:'ارقصي',jump:'نطّي',shy:'اتكسفي',flower:'حط وردة في شعرها',wow:'يا سلام',hand:'امسكي إيده',sit:'اقعدي',main:'تفاعل'}};
+var RLAB={en:{wave:'Wave',heart:'Heart hands',kiss:'Blow a kiss',clap:'Clap',cheer:'Cheer',laugh:'Laugh',cry:'Cry',dance:'Dance',jump:'Jump',shy:'Shy',flower:'Put a flower in her hair',flowerWait:'Move closer together',wow:'Wow',hand:'Hold hands',sit:'Sit',main:'React'},ar:{wave:'لوّح',heart:'قلب بإيديكي',kiss:'ابعتي بوسة',clap:'صفّقي',cheer:'هلّلي',laugh:'اضحكي',cry:'عيّطي',dance:'ارقصي',jump:'نطّي',shy:'اتكسفي',flower:'حط وردة في شعرها',flowerWait:'قرّبوا من بعض',wow:'يا سلام',hand:'امسكي إيده',sit:'اقعدي',main:'تفاعل'}};
 var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,flower:2.6,wow:2.4,hand:5};
 var REMO={wave:'\uD83D\uDC4B',heart:'\uD83E\uDEF6',kiss:'\uD83D\uDE18',clap:'\uD83D\uDC4F',cheer:'\uD83D\uDE4C',laugh:'\uD83D\uDE02',cry:'\uD83D\uDE2D',dance:'\uD83D\uDC83',jump:'\uD83E\uDD38',shy:'\uD83D\uDE48',flower:'\uD83C\uDF38',wow:'\uD83D\uDE2E',hand:'\uD83D\uDC6B',sit:'\uD83E\uDE91'};
 var myR=null, npcR=null, tray=document.createElement('div'); tray.className='tray'; tray.hidden=true; emEl.appendChild(tray);
 var emMain=document.createElement('button'); emMain.className='em-main'; emMain.setAttribute('aria-expanded','false'); emEl.appendChild(emMain);
 var rbtn={};
 REACTS.forEach(function(n){ var bt=document.createElement('button'); bt.addEventListener('click',function(){ doReact(n); tray.hidden=true; emMain.setAttribute('aria-expanded','false'); }); tray.appendChild(bt); rbtn[n]=bt; });
-window.emRefresh=function(){ var L=RLAB[LANG]||RLAB.en; REACTS.forEach(function(n){ rbtn[n].textContent=REMO[n]; rbtn[n].title=rbtn[n].ariaLabel=L[n]; }); emMain.innerHTML='<svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56C14 42 6 32 6 21 6 13 12 8 19 8c5 0 10 3 13 8 3-5 8-8 13-8 7 0 13 5 13 13 0 11-8 21-26 35z" fill="#ff7d96"/></svg><span>'+L.main+'</span>'; emMain.setAttribute('aria-label',L.main); };
+function flowerNear(){ return Math.hypot(player.position.x-npc.position.x,player.position.z-npc.position.z)<=2.25; }
+function updateFlowerAvailability(){ var b=rbtn.flower, L=RLAB[LANG]||RLAB.en, near=flowerNear(); b.disabled=!near; b.title=b.ariaLabel=near?L.flower:L.flowerWait; }
+window.emRefresh=function(){ var L=RLAB[LANG]||RLAB.en; REACTS.forEach(function(n){ rbtn[n].textContent=REMO[n]; rbtn[n].title=rbtn[n].ariaLabel=L[n]; }); updateFlowerAvailability(); emMain.innerHTML='<svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56C14 42 6 32 6 21 6 13 12 8 19 8c5 0 10 3 13 8 3-5 8-8 13-8 7 0 13 5 13 13 0 11-8 21-26 35z" fill="#ff7d96"/></svg><span>'+L.main+'</span>'; emMain.setAttribute('aria-label',L.main); };
 emRefresh();
 emMain.addEventListener('click',function(){ tray.hidden=!tray.hidden; emMain.setAttribute('aria-expanded',String(!tray.hidden)); });
 function doReact(n){
   if(n==='sit'){ sitToggle(); return; }
   if(state!=='explore'||seat||!RDUR[n]) return;
   if(n==='flower'){
+    if(!flowerNear()) return;
     var fr={n:n,t:0,d:RDUR[n]};
     if(player.userData.him) myR=fr; else npcR=fr;
     if(ROLE) send({t:'flower'});
@@ -2586,7 +2599,7 @@ function enterGarden(){ if(gardenOn) return; gardenOn=true; document.body.classL
   var T=LIGHTS[lightMode]; T.amb=.62; T.ambC=0xffd9e4; T.hemi=.55; hemi.color.set(0xffc4d8); hemi.groundColor.set(0x6a4a6a);
   camPos.set(2.9,1.05,-34.8); camLook.set(0,1.15,-36.5); }
 
-function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,now); if(npcR&&state==='explore') applyReact(npc,npcR,dt,false);
+function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,now); updateFlowerAvailability(); if(npcR&&state==='explore') applyReact(npc,npcR,dt,false);
   emEl.hidden=!(state==='explore'&&!hud.hidden);
   if(seat&&(keys.up||keys.down||keys.left||keys.right||Math.hypot(joy.x,joy.y)>.25)) standUp();
   if(!gardenOn){
