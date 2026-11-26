@@ -1138,7 +1138,7 @@ function makeAvatar(o){
   var hairFlower=makeHairFlower(.205,2.005,.145);
   hairFlower.visible=false;
   var carriedFlower=null;
-  if(o.him){ carriedFlower=hairFlower.clone(true); carriedFlower.position.set(0,-.045,.075); carriedFlower.scale.setScalar(.68); carriedFlower.visible=true; aR.hand.add(carriedFlower); }
+  if(o.him){ carriedFlower=hairFlower.clone(true); carriedFlower.position.set(0,-.045,.075); carriedFlower.scale.setScalar(.68); carriedFlower.visible=true; aL.hand.add(carriedFlower); }
   hp(SPH(.27),skin,0,1.795,0,Wm?.93:.97,Wm?1:1.02,Wm?.98:1,1.05); hp(SPH(.045),skin,Wm?-.24:-.262,1.78,0,.6,1,1,1.12); hp(SPH(.045),skin,Wm?.24:.262,1.78,0,.6,1,1,1.12);
   var glowIris=new THREE.MeshBasicMaterial({color:new THREE.Color(o.eye).lerp(new THREE.Color(0xffffff),.42)}), browM=new THREE.MeshBasicMaterial({color:new THREE.Color(o.hair).multiplyScalar(.5)});
   var FE=[],FB=[],FLD=[],FACE={eyes:FE,brows:FB,lids:FLD,blushM:blushM,bBase:blushM.opacity};
@@ -2383,7 +2383,7 @@ function setFace(u,f,w){
 var TEART=radialTex('rgba(170,220,255,.95)','rgba(170,220,255,0)');
 function applyReact(av,r,dt,isMe){
   var u=av.userData; r.t+=dt;
-  function stop(){ if(r.n==='flower'){ if(u.flowerArmBaseY!=null) u.armR.scale.y=u.flowerArmBaseY; if(u.carriedFlower&&!r.placed) u.carriedFlower.visible=true; } if(isMe) myR=null; else npcR=null; }
+  function stop(){ if(r.n==='flower'){ if(u.flowerArmBaseY!=null) u.armL.scale.y=u.flowerArmBaseY; if(u.carriedFlower&&!r.placed) u.carriedFlower.visible=true; } if(isMe) myR=null; else npcR=null; }
   if(r.n!=='flower'&&(isMe?u.amp>.35:(ROLE&&rem.m))){ stop(); return; }
   if(r.t>=r.d){ stop(); return; }
   var t=r.t, S=Math.sin, CO=Math.cos, PI=Math.PI, k=clampN(t/r.d,0,1), w=ease(clampN(Math.min(t/.3,(r.d-t)/.35),0,1)), n=r.n;
@@ -2460,7 +2460,7 @@ function applyReact(av,r,dt,isMe){
   else if(n==='flower'){
     var recipient=av===player?npc:player, dx=recipient.position.x-av.position.x, dz=recipient.position.z-av.position.z, dist=Math.hypot(dx,dz);
     if(!ROLE||av===player){
-      if(dist>.42){ var step=Math.min(dist-.42,dt*2.5); av.position.x+=dx/dist*step; av.position.z+=dz/dist*step; }
+      if(dist>.55){ var step=Math.min(dist-.55,dt*2.5); av.position.x+=dx/dist*step; av.position.z+=dz/dist*step; }
       av.rotation.y=lerpAngle(av.rotation.y,Math.atan2(dx,dz),1-Math.exp(-dt*8));
     }
     H(.08,-.12,.08); B(.025,0,.015); prep(); recipient.updateMatrixWorld(true);
@@ -2470,10 +2470,10 @@ function applyReact(av,r,dt,isMe){
     var close=Math.hypot(recipient.position.x-av.position.x,recipient.position.z-av.position.z), reach=ease(clampN((1.15-close)/.65,0,1));
     var chest=G(.38,1.28,.2), raise=ease(clampN(t/.5,0,1))*reach, handTarget=chest.clone().lerp(fpos,raise);
     handTarget.lerp(chest,ease(clampN((t-1.55)/.45,0,1)));
-    if(u.flowerArmBaseY==null) u.flowerArmBaseY=u.armR.scale.y;
-    u.armR.scale.y=mix(u.flowerArmBaseY,u.flowerArmBaseY*1.34,reach*w);
+    if(u.flowerArmBaseY==null) u.flowerArmBaseY=u.armL.scale.y;
+    u.armL.scale.y=mix(u.flowerArmBaseY,u.flowerArmBaseY*1.34,reach*w);
     if(u.carriedFlower&&!r.placed) u.carriedFlower.visible=true;
-    IK(1,IK_PC,handTarget,fn,.35,[[-2.25,-.22,-.9,-.25],[-2.65,.2,-.7,.4],[-1.8,-.65,-1.3,.2]],w*reach);
+    IK(-1,IK_PC,handTarget,fn,.35,[[-2.25,.22,-.9,.25],[-2.65,-.2,-.7,-.4],[-1.8,.65,-1.3,-.2]],w*reach);
     if(t>1.05&&close<=.72&&!r.placed){ r.placed=true; if(u.carriedFlower) u.carriedFlower.visible=false; if(ru.hairFlower) ru.hairFlower.visible=true; chime([79,84,88],.12,.1); }
     F({mouth:'smile',eye:.92,brow:.18,blush:.75}); }
   else if(n==='wow'){ var wp=ease(clampN(t/.25,0,1)); H(-.12*wp,0,0); B(-.1*wp,0,0); av.position.y+=S(Math.min(1,t/.25)*PI)*.1; prep();
