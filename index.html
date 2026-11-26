@@ -65,6 +65,17 @@ body.letterMode #mapBox,body.letterMode .brand,body.letterMode #hint,body.letter
 #capPill{position:absolute;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 46px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:10px 10px 10px 20px;border-radius:999px;background:rgba(20,18,23,.78);backdrop-filter:blur(10px);border:1px solid var(--line);pointer-events:auto}
 #capText{font-family:var(--serif);font-style:italic;font-size:21px;line-height:1.1;min-width:0;overflow-wrap:anywhere}
 #capPill button{flex:none;border:0;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600}
+#tourGuide{position:absolute;z-index:26;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 184px);transform:translateX(-50%);width:min(370px,calc(100% - 32px));padding:14px 16px;border:1px solid rgba(255,190,205,.3);border-radius:18px;background:linear-gradient(145deg,rgba(42,25,37,.92),rgba(22,18,27,.92));backdrop-filter:blur(12px);box-shadow:0 14px 38px rgba(0,0,0,.42);pointer-events:auto}
+#tourGuide[hidden]{display:none}
+.tour-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#f2b5c3;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.tour-body{display:flex;align-items:center;gap:12px;margin-top:8px}
+#tourArrow{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:rgba(232,80,107,.2);color:#ffd4df;font-size:26px;line-height:1}
+.tour-copy{min-width:0;display:flex;flex-direction:column;gap:3px}
+#tourTitle{font-family:var(--serif);font-size:18px;line-height:1.15;color:#fff4f0;overflow-wrap:anywhere}
+#tourMessage{font-size:12px;line-height:1.4;color:#d5c5cb}
+.tour-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+#tourDistance{font-size:11.5px;color:#e4cbd1}
+#tourStop{padding:6px 12px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:600}
 #capBtn{background:var(--paper);color:var(--ink)}
 #capListen{background:var(--rose);color:#fff}
 #capOpen{background:#ffb3bf;color:#2b1f22;animation:beat 1.4s ease-in-out infinite}
@@ -399,6 +410,11 @@ body{background:#1a0d14}
     <div id="hint"></div>
     <div id="exitPill" hidden><button id="exitBtn">🚪 Exit <kbd>X</kbd></button></div>
     <div id="exitBox" hidden><div class="eb"><p id="exitQ">Leave the museum?</p><div><button id="exitStay">Stay</button><button id="exitGo">Leave</button></div></div></div>
+    <section id="tourGuide" hidden aria-live="polite" aria-label="Guided museum tour">
+      <div class="tour-top"><span id="tourProgress"></span><span>♥</span></div>
+      <div class="tour-body"><div id="tourArrow" aria-hidden="true">↑</div><div class="tour-copy"><strong id="tourTitle"></strong><span id="tourMessage"></span></div></div>
+      <div class="tour-foot"><span id="tourDistance"></span><button id="tourStop"></button></div>
+    </section>
   </div>
   <div id="stick" hidden><div id="knob"></div></div>
   <div id="toast"></div>
@@ -1446,16 +1462,88 @@ function applyLookAll(){ AV.forEach(applyLook); }
 })();
 applyLookAll();
 
+/* Optional guided museum tour */
+var TOUR_ORDER=[0,1,3,2,4,5,7,6], TOUR_TOTAL=11;
+var museumTour={active:false,complete:false,index:0,target:null};
+var tourMarker=new THREE.Group(), tourOuter=new THREE.Mesh(new THREE.TorusGeometry(.62,.035,8,48),new THREE.MeshBasicMaterial({color:0xff8da5,transparent:true,opacity:.95,depthWrite:false}));
+tourOuter.rotation.x=-Math.PI/2; tourOuter.position.y=.045; tourMarker.add(tourOuter);
+var tourInner=new THREE.Mesh(new THREE.TorusGeometry(.38,.018,8,40),new THREE.MeshBasicMaterial({color:0xffd99a,transparent:true,opacity:.9,depthWrite:false}));
+tourInner.rotation.x=-Math.PI/2; tourInner.position.y=.055; tourMarker.add(tourInner);
+var tourGlow=new THREE.Mesh(new THREE.PlaneGeometry(2.3,2.3),new THREE.MeshBasicMaterial({map:radialTex('rgba(255,105,145,.42)','rgba(255,105,145,0)'),transparent:true,opacity:.72,depthWrite:false,side:THREE.DoubleSide}));
+tourGlow.rotation.x=-Math.PI/2; tourGlow.position.y=.018; tourMarker.add(tourGlow);
+var tourSpark=new THREE.Mesh(new THREE.SphereGeometry(.09,12,10),new THREE.MeshBasicMaterial({color:0xffe2ae})); tourSpark.position.y=.78; tourMarker.add(tourSpark); tourMarker.visible=false; scene.add(tourMarker);
+function tourStopAt(i){
+  if(i<8){ var fi=TOUR_ORDER[i], f=frames[fi]; return {kind:'frame',index:fi,x:f.x<0?-11.15:11.15,z:f.z}; }
+  if(i===8) return {kind:'room',zone:1,x:-17,z:-25.5};
+  if(i===9) return {kind:'room',zone:2,x:17,z:-25.5};
+  return {kind:'proposal',x:0,z:-30.5};
+}
+function tourText(key){
+  var ar=LANG==='ar';
+  var en={button:'🧭 Guided tour',end:'✕ End tour',again:'↻ Tour again',close:'Close',stop:'Stop '+(museumTour.index+1)+' of '+TOUR_TOTAL,doneProgress:'Tour complete · 11 / 11',
+    frameTitle:'Photo '+(museumTour.index<8?TOUR_ORDER[museumTour.index]+1:''),frameMessage:'Walk to the glowing marker. Open the photo when you get close.',photoTitle:'Photo Booth',photoMessage:'Step into the Photo Booth to explore the shared memories.',drawTitle:'Drawing Studio',drawMessage:'Visit the Drawing Studio and make a picture together.',proposalTitle:'The proposal',proposalMessage:'Follow the hall to the proposal spot.',doneTitle:'Tour complete ♥',doneMessage:'You visited all the memories and both creative rooms. The proposal spot is ahead.',here:'You’re here',walk:'Walk ',meters:' m'};
+  var arText={button:'🧭 جولة إرشادية',end:'✕ إنهاء الجولة',again:'↻ جولة مرة أخرى',close:'إغلاق',stop:'محطة '+(museumTour.index+1)+' من '+TOUR_TOTAL,doneProgress:'اكتملت الجولة · 11 / 11',
+    frameTitle:'الصورة '+(museumTour.index<8?TOUR_ORDER[museumTour.index]+1:''),frameMessage:'امشِ نحو العلامة المضيئة وافتح الصورة لما تقرب.',photoTitle:'ركن التصوير',photoMessage:'ادخل ركن التصوير واكتشفوا ذكرياتكم معاً.',drawTitle:'ورشة الرسم',drawMessage:'زوروا ورشة الرسم واعملوا رسمة مع بعض.',proposalTitle:'مكان المفاجأة',proposalMessage:'اتبع الممر إلى مكان المفاجأة.',doneTitle:'اكتملت الجولة ♥',doneMessage:'شاهدت كل الذكريات وزرت الركنين. مكان المفاجأة أمامك.',here:'وصلت للمكان',walk:'امشِ ',meters:' م'};
+  return (ar?arText:en)[key];
+}
+function tourSet(id,value){ var e=$(id); if(e&&e.textContent!==value) e.textContent=value; }
+function refreshTourButton(){ if(!tTour) return; tTour.textContent=museumTour.active?tourText('end'):(museumTour.complete?tourText('again'):tourText('button')); tTour.title=tTour.ariaLabel=tTour.textContent; tTour.disabled=state!=='explore'; }
+function renderMuseumTour(now){
+  var guide=$('tourGuide'); if(!guide) return;
+  guide.setAttribute('aria-label',LANG==='ar'?'جولة إرشادية في المتحف':'Guided museum tour');
+  guide.hidden=!museumTour.active&&!museumTour.complete; tourMarker.visible=!!museumTour.active;
+  refreshTourButton();
+  if(museumTour.complete){
+    tourSet('tourProgress',tourText('doneProgress'));
+    tourSet('tourTitle',tourText('doneTitle')); tourSet('tourMessage',tourText('doneMessage')); tourSet('tourArrow','♥'); tourSet('tourDistance',''); tourSet('tourStop',tourText('close')); return;
+  }
+  if(!museumTour.active||!museumTour.target) return;
+  var step=museumTour.target, dx=step.x-player.position.x, dz=step.z-player.position.z, distance=Math.hypot(dx,dz);
+  var forward=-Math.sin(camYaw)*dx-Math.cos(camYaw)*dz, right=Math.cos(camYaw)*dx-Math.sin(camYaw)*dz;
+  var arrows=['↑','↗','→','↘','↓','↙','←','↖'], dir=(Math.round(Math.atan2(right,forward)/(Math.PI/4))+8)%8;
+  var title,message;
+  if(step.kind==='frame'){ title=tourText('frameTitle')+' · '+CAP(step.index); message=tourText('frameMessage'); }
+  else if(step.kind==='room'&&step.zone===1){ title=tourText('photoTitle'); message=tourText('photoMessage'); }
+  else if(step.kind==='room'){ title=tourText('drawTitle'); message=tourText('drawMessage'); }
+  else { title=tourText('proposalTitle'); message=tourText('proposalMessage'); }
+  tourSet('tourProgress',tourText('stop')); tourSet('tourTitle',title); tourSet('tourMessage',message); tourSet('tourArrow',arrows[dir]);
+  var n=Math.round(distance), nf=new Intl.NumberFormat(LANG==='ar'?'ar-EG':'en-US').format(n);
+  tourSet('tourDistance',distance<2.3?tourText('here'):tourText('walk')+nf+tourText('meters')); tourSet('tourStop',tourText('end'));
+  tourMarker.position.set(step.x,0,step.z); var phase=(now||0)*.001;
+  tourOuter.scale.setScalar(1+.08*Math.sin(phase*2.7)); tourInner.rotation.z=phase*.7; tourGlow.material.opacity=.58+.18*Math.sin(phase*2.2);
+  tourSpark.position.y=.76+.16*Math.sin(phase*2.5); tourSpark.scale.setScalar(.9+.18*Math.sin(phase*2.5));
+}
+function finishMuseumTour(showComplete){
+  museumTour.active=false; museumTour.complete=!!showComplete; museumTour.target=null; tourMarker.visible=false;
+  if(!showComplete) $('tourGuide').hidden=true;
+  renderMuseumTour(0);
+}
+function toggleMuseumTour(){
+  if(museumTour.active){ finishMuseumTour(false); return; }
+  if(state!=='explore') return;
+  museumTour.active=true; museumTour.complete=false; museumTour.index=0; museumTour.target=tourStopAt(0); $('tourGuide').hidden=false;
+  renderMuseumTour(performance.now());
+}
+function updateMuseumTour(now){
+  if(!museumTour.active||state!=='explore') return;
+  var step=museumTour.target, d=Math.hypot(step.x-player.position.x,step.z-player.position.z), arrived=step.kind==='room'?zoneOf(player.position)===step.zone&&d<4.2:d<2.3;
+  if(arrived){ museumTour.index++; chime([79,84,88],.11,.1); if(museumTour.index>=TOUR_TOTAL){ finishMuseumTour(true); return; } museumTour.target=tourStopAt(museumTour.index); }
+  renderMuseumTour(now);
+}
+
 /* music toggle */
 try{ muted=localStorage.getItem('ourMuseumMuted')==='1'; }catch(e){}
-var tMusic=document.createElement('button'), tHome=null; tMusic.className='tool icon'; tMusic.id='tMusic';
+var tMusic=document.createElement('button'), tHome=null, tTour=document.createElement('button'); tMusic.className='tool icon'; tMusic.id='tMusic'; tTour.className='tool'; tTour.id='tTour';
 var tLook=document.createElement('button'); tLook.className='tool'; tLook.id='tLook';
 $('tools').insertBefore(tMusic,$('tools').firstChild);
+$('tools').appendChild(tTour); tTour.addEventListener('click',toggleMuseumTour);
+$('tourStop').addEventListener('click',function(){ if(museumTour.active){ finishMuseumTour(false); return; } museumTour.complete=false; $('tourGuide').hidden=true; refreshTourButton(); });
 function refreshExtra(){
   var ar=LANG==='ar';
   tMusic.textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; tMusic.title=tMusic.ariaLabel=muted?(ar?'تشغيل الموسيقى':'Turn music on'):(ar?'إيقاف الموسيقى':'Turn music off');
   tLook.textContent='\uD83D\uDC57 '+(ar?'تخصيص الشخصيات':'Customize');
   if(MUSEUM_MODE){ if(!tHome){ tHome=document.createElement('button'); tHome.className='tool'; tHome.id='tHome'; tHome.addEventListener('click',function(){ window.top.location.href=new URL('index.html',location.href).href; }); $('tools').insertBefore(tHome,$('tools').firstChild); } tHome.textContent=ar?'← الإعداد':'← Intro'; }
+  refreshTourButton(); if(museumTour.active||museumTour.complete) renderMuseumTour(performance.now());
   if(window.lkRefresh) lkRefresh(); if(window.emRefresh) emRefresh();
 }
 tMusic.addEventListener('click',function(){ setMuted(!muted); try{ localStorage.setItem('ourMuseumMuted',muted?'1':'0'); }catch(e){} if(!muted&&typeof initAudio==='function'){ initAudio(); startMusic(); } refreshExtra(); });
@@ -1532,13 +1620,14 @@ var flags={l3:false,l4:false}, cine={stage:-1,t:0,k:0,shock:false}, hug={on:fals
 
 function startExplore(){
   state='explore'; intro.classList.add('out'); setTimeout(function(){ intro.hidden=true; },1900); hud.hidden=false;
+  refreshTourButton();
   initAudio(); startMusic(); setMuted(muted); chime([67,72,76],.2,.12);
   if(isTouch){ stick.hidden=false; hint.textContent=t('hintT'); } else hint.textContent=t('hintD');
   setTimeout(function(){ hint.style.opacity='0'; },9000);
   if(!ROLE){ setTimeout(function(){ say('me',C('l1'),3000); },900);
   setTimeout(function(){ say('npc',C('l2'),3200); },3300); }
 }
-function startCine(){ liveEv('cine'); player.userData.rate=1; state='cinematic'; cine.stage=0; cine.t=0; cine.k=0; cine.shock=false; stick.hidden=true; $('capPill').hidden=true; hint.style.opacity='0'; $('exitPill').hidden=true; setNear(-1); }
+function startCine(){ finishMuseumTour(false); liveEv('cine'); player.userData.rate=1; state='cinematic'; refreshTourButton(); cine.stage=0; cine.t=0; cine.k=0; cine.shock=false; stick.hidden=true; $('capPill').hidden=true; hint.style.opacity='0'; $('exitPill').hidden=true; setNear(-1); }
 function updateCine(dt){
   if(cine.stage===0){
     var dx=0-player.position.x,dz=-35.9-player.position.z,d=Math.hypot(dx,dz);
@@ -1827,6 +1916,7 @@ function frame(now){
     if(pz>=-28.5&&pz<=-22.5&&Math.abs(px0)>13.7) best=-1; /* inside the photo booth / drawing studio: no painting caption */
     if(state==='explore') setNear(best);
     var nearExit=Math.hypot(px0-EXITPOS.x,pz-EXITPOS.z)<3.4; $('exitPill').hidden=!nearExit;
+    if(state==='explore') updateMuseumTour(now);
   } else $('exitPill').hidden=true;
   tvDraw(now);
 
@@ -2072,7 +2162,7 @@ var ringBusy=false, ringShown=null;
 function fadeThen(cb,hold){ var f=$('fade'); f.style.opacity='1'; setTimeout(function(){ try{ cb(); }catch(e){} setTimeout(function(){ f.style.opacity='0'; },hold||200); },600); }
 function hostEnterCine(){
   ringBusy=false; if(state==='hostcine') return;
-  state='hostcine'; hostK=0; player.position.set(0,0,-37.4); player.rotation.y=0; setNear(-1); stick.hidden=true; rem.got=false;
+  finishMuseumTour(false); state='hostcine'; refreshTourButton(); hostK=0; player.position.set(0,0,-37.4); player.rotation.y=0; setNear(-1); stick.hidden=true; rem.got=false;
   camPos.set(2.9,1.05,-34.8); camLook.set(0,1.15,-36.5);
 }
 function guestEnterRing(){
