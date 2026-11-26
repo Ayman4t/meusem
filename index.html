@@ -2464,8 +2464,7 @@ function applyReact(av,r,dt,isMe){
       av.rotation.y=lerpAngle(av.rotation.y,Math.atan2(dx,dz),1-Math.exp(-dt*8));
     }
     H(.08,-.12,.08); B(.025,0,.015); prep(); recipient.updateMatrixWorld(true);
-    var ru=recipient.userData, sideAxis=new THREE.Vector3(1,0,0).transformDirection(ru.hd.matrixWorld), toBoy=new THREE.Vector3(av.position.x-recipient.position.x,0,av.position.z-recipient.position.z).normalize();
-    var side=sideAxis.dot(toBoy)>=0?1:-1; ru.hairFlower.position.x=side*.205; ru.hairFlowerTarget.x=ru.hairFlower.position.x;
+    var ru=recipient.userData; ru.hairFlower.position.x=-.205; ru.hairFlowerTarget.x=-.205;
     var fpos=ru.hairFlower.getWorldPosition(new THREE.Vector3()), fn=new THREE.Vector3(0,0,1).transformDirection(ru.hd.matrixWorld);
     var close=Math.hypot(recipient.position.x-av.position.x,recipient.position.z-av.position.z), reach=ease(clampN((1.15-close)/.65,0,1));
     var chest=G(.38,1.28,.2), raise=ease(clampN(t/.5,0,1))*reach, handTarget=chest.clone().lerp(fpos,raise);
