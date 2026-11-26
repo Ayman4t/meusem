@@ -214,6 +214,11 @@ body.letterMode #mapBox,body.letterMode .brand,body.letterMode #hint,body.letter
 .lk-sw button{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,.22);padding:0;position:relative;transition:transform .12s}
 .lk-sw button:hover{transform:scale(1.1)}
 .lk-sw button.on{border-color:#fff;box-shadow:0 0 0 2px var(--rose)}
+.lk-outfits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lk-outfit{min-width:0;min-height:70px;padding:7px 4px;border:1px solid rgba(168,42,67,.2);border-radius:14px;background:#fff8f6;color:#51313b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.lk-outfit:hover{border-color:var(--rose);transform:translateY(-1px)}
+.lk-outfit.on{background:#fff0f2;border-color:var(--rose);box-shadow:0 0 0 2px rgba(217,63,90,.2)}
+.lk-outfit-icon{font-size:23px;line-height:1.1}.lk-outfit-label{font-size:11px;line-height:1.2;text-align:center}
 .lk-card footer{display:flex;gap:10px;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
 @media (max-width:640px){.lk-body{flex-direction:column}.lk-prev{flex:0 0 auto;min-width:0}#pvCv{min-height:210px;height:210px;flex:none}.lk-card h2{font-size:22px}}
 
@@ -1097,23 +1102,22 @@ function makeAvatar(o){
   } else {
   part(up,new THREE.CylinderGeometry(.18,.215,.62,18),top,0,1.17,0,1,1,1,1.04);
   part(up,SPH(.08),top,-.23,1.45,0,1,1,1,1.08); part(up,SPH(.08),top,.23,1.45,0,1,1,1,1.08); }
-  if(o.vest){ var vm=mat(o.vest);
-    part(up,new THREE.CylinderGeometry(.192,.228,.5,20),vm,0,1.19,0,1,1,1,1.04);
-    [-1,1].forEach(function(sx){ part(up,new THREE.BoxGeometry(.05,.5,.05),vm,sx*.17,1.3,.02,1,1,1,1.04); });
-    part(up,new THREE.BoxGeometry(.075,.34,.02),top,0,1.27,.232,1,1,1,0);
-    [0,1,2].forEach(function(k){ part(up,SPH(.014),mat(0x3a2418),0,1.12+k*.06,.262-.002*k,1,1,.6,0); });
-  }
-  if(o.suit){
-    part(up,new THREE.BoxGeometry(.1,.3,.02),mat(0xf6f3ee),0,1.31,.208,1,1,1,0);
-    part(up,new THREE.BoxGeometry(.034,.22,.016),tieM,0,1.27,.222,1,1,1,0);
-    part(up,new THREE.BoxGeometry(.05,.04,.018),tieM,0,1.4,.222,1,1,1,0);
-    [-1,1].forEach(function(ls){ var lp=part(up,new THREE.BoxGeometry(.05,.3,.018),topD,ls*.062,1.3,.205,1,1,1,0); lp.rotation.z=ls*.28; });
-    part(up,new THREE.CylinderGeometry(.196,.23,.07,20),topD,0,1.0,0,1,1,1,1.04);
-    
-  }
+  var vestG=new THREE.Group(); up.add(vestG); var vestM=mat(o.vest!=null?o.vest:o.top);
+  part(vestG,new THREE.CylinderGeometry(.192,.228,.5,20),vestM,0,1.19,0,1,1,1,1.04);
+  [-1,1].forEach(function(sx){ part(vestG,new THREE.BoxGeometry(.05,.5,.05),vestM,sx*.17,1.3,.02,1,1,1,1.04); });
+  part(vestG,new THREE.BoxGeometry(.075,.34,.02),top,0,1.27,.232,1,1,1,0);
+  [0,1,2].forEach(function(k){ part(vestG,SPH(.014),mat(0x3a2418),0,1.12+k*.06,.262-.002*k,1,1,.6,0); });
+  vestG.visible=!!o.vest;
+  var suitG=new THREE.Group(); up.add(suitG);
+  part(suitG,new THREE.BoxGeometry(.1,.3,.02),mat(0xf6f3ee),0,1.31,.208,1,1,1,0);
+  part(suitG,new THREE.BoxGeometry(.034,.22,.016),tieM,0,1.27,.222,1,1,1,0);
+  part(suitG,new THREE.BoxGeometry(.05,.04,.018),tieM,0,1.4,.222,1,1,1,0);
+  [-1,1].forEach(function(ls){ var lp=part(suitG,new THREE.BoxGeometry(.05,.3,.018),topD,ls*.062,1.3,.205,1,1,1,0); lp.rotation.z=ls*.28; });
+  part(suitG,new THREE.CylinderGeometry(.196,.23,.07,20),topD,0,1.0,0,1,1,1,1.04); suitG.visible=!!o.suit;
   if(o.belt){ if(Wm) part(up,new THREE.CylinderGeometry(.152,.152,.03,18),beltM,0,1.14,0,1,1,.9,1.05); else part(up,new THREE.CylinderGeometry(.22,.22,.035,18),mat(o.belt),0,.86,0,1,1,1,1.03); }
-  var skirtM=null; if(o.skirt) skirtM=part(g,new THREE.CylinderGeometry(.22,.4,.42,24),bottom,0,.74,0,1,1,1,1.03);
-  else if(Wm) part(up,SPH(.22),bottom,0,.85,0,1,.66,.86,1.04);
+  var skirtM=null,pantsHip=null;
+  if(Wm){ skirtM=part(g,new THREE.CylinderGeometry(.22,.4,.42,24),bottom,0,.74,0,1,1,1,1.03); skirtM.visible=!!o.skirt;
+    pantsHip=part(up,new THREE.CylinderGeometry(.18,.215,.28,18),bottom,0,.8,0,1,1,1,1.04); pantsHip.visible=!o.skirt; }
   else part(up,new THREE.CylinderGeometry(.215,.195,.2,18),bottom,0,.83,0,1,1,1,1.04);
   /* shoulders slope smoothly into a sturdier, shorter neck (trapezius blend) */
   var trap=part(up,SPH(.15),top,0,1.465,-.005,Wm?1.38:1.55,.56,Wm?.86:.92,1.03);
@@ -1195,7 +1199,7 @@ function makeAvatar(o){
   ring.scale.setScalar(1.15);
   aR.el.add(ring);
   var shd=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:radialTex('rgba(0,0,0,.5)','rgba(0,0,0,0)'),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,fog:false})); shd.rotation.x=-Math.PI/2; shd.position.y=.035/(o.sc||.82); shd.renderOrder=2; g.add(shd);
-  g.userData={legL:lL.th,kneeL:lL.sh,legR:lR.th,kneeR:lR.sh,armL:aL.sh,elL:aL.el,armR:aR.sh,elR:aR.el,handL:aL.hand,handR:aR.hand,face:FACE,fd:0,ring:ring,lid:lidG,spark:rSpark,mats:{skin:skin,top:top,topD:topD,bottom:bottom,legs:legM,hair:hair,shoe:shoe,iris:irisM,tie:tieM,belt:beltM,trim:trim},hip:hip,up:up,hd:hd,hairFlower:hairFlower,hairFlowerTarget:new THREE.Vector3(hairFlower.position.x,hairFlower.position.y,hairFlower.position.z),carriedFlower:carriedFlower,dy:hy-(Wm?.77:.74),seatY:.5-(hy-(Wm?.175:.15))*(o.sc||.82),phase:0,amp:0,t:Math.random()*10,lastStep:0,hair:hairBack,hr:0,sc:o.sc||.82,him:!!o.him,skirt:skirtM};
+  g.userData={legL:lL.th,kneeL:lL.sh,legR:lR.th,kneeR:lR.sh,armL:aL.sh,elL:aL.el,armR:aR.sh,elR:aR.el,handL:aL.hand,handR:aR.hand,face:FACE,fd:0,ring:ring,lid:lidG,spark:rSpark,mats:{skin:skin,top:top,topD:topD,bottom:bottom,legs:legM,hair:hair,shoe:shoe,iris:irisM,tie:tieM,belt:beltM,trim:trim,vest:vestM},outfitMeshes:{suit:suitG,vest:vestG},pantsHip:pantsHip,hip:hip,up:up,hd:hd,hairFlower:hairFlower,hairFlowerTarget:new THREE.Vector3(hairFlower.position.x,hairFlower.position.y,hairFlower.position.z),carriedFlower:carriedFlower,dy:hy-(Wm?.77:.74),seatY:.5-(hy-(Wm?.175:.15))*(o.sc||.82),phase:0,amp:0,t:Math.random()*10,lastStep:0,hair:hairBack,hr:0,sc:o.sc||.82,him:!!o.him,skirt:skirtM};
   var kS=o.slim||1; g.scale.set((o.sc||.82)*kS,(o.sc||.82),(o.sc||.82)*kS); hd.scale.set((Wm?1.02:1.07)/kS,(Wm?1.02:1.07),(Wm?1.02:1.07)/kS); scene.add(g); AV.push(g); return g;
 }
 var STY_HER_OLD={skin:0xf3c9a9,hair:0x6a3f2a,top:0x2f6b57,vest:0xc9748a,trim:0xe8a3b3,bottom:0xc9748a,legs:0x5b4a52,shoe:0x7a3f28,skirt:true,turtle:true,long:true,curly:true,sc:.79,him:false};
@@ -1399,23 +1403,42 @@ var LK_PAL={
   shoe:[0x1a1210,0x3a2018,0x8a1c2a,0xe8e0d4,0x1c2a4a]
 };
 var LK_ROWS={
-  him:[['jacket',['top'],'jacket','Jacket','البدلة'],['pants',['bottom'],'pants','Trousers','البنطلون'],['accent',['accent'],'accent','Tie','الكرافتة'],['shoe',['shoe'],'shoe','Shoes','الحذاء'],['hair',['hair'],'hair','Hair','الشعر'],['eye',['eye'],'eye','Eyes','العيون'],['skin',['skin'],'skin','Skin','البشرة']],
-  her:[['dress',['top','bottom'],'dress','Dress','الفستان'],['accent',['belt','trim'],'accent','Belt & details','الحزام'],['shoe',['shoe'],'shoe','Shoes','الحذاء'],['hair',['hair'],'hair','Hair','الشعر'],['eye',['eye'],'eye','Eyes','العيون'],['skin',['skin'],'skin','Skin','البشرة']]
+  him:[['jacket',['top'],'jacket','Jacket','الجاكيت'],['outer',['vest'],'jacket','Waistcoat','الصديري'],['pants',['bottom'],'pants','Trousers','البنطلون'],['accent',['accent'],'accent','Tie','الكرافتة'],['shoe',['shoe'],'shoe','Shoes','الحذاء'],['hair',['hair'],'hair','Hair','الشعر'],['eye',['eye'],'eye','Eyes','العيون'],['skin',['skin'],'skin','Skin','البشرة']],
+  her:[['dress',['top','bottom'],'dress','Dress / blouse','الفستان / البلوزة'],['outer',['vest'],'jacket','Vest','الصديري'],['pants',['pants'],'pants','Trousers','البنطلون'],['accent',['belt','trim'],'accent','Belt & details','الحزام'],['shoe',['shoe'],'shoe','Shoes','الحذاء'],['hair',['hair'],'hair','Hair','الشعر'],['eye',['eye'],'eye','Eyes','العيون'],['skin',['skin'],'skin','Skin','البشرة']]
 };
+var LK_OUTFITS={
+  him:[
+    {key:'suit',icon:'🤵',en:'Suit & tie',ar:'بدلة وكرافتة',colors:{top:0x1c2a4a,bottom:0x16171d,accent:0x7a1830,vest:0x1c2a4a}},
+    {key:'vest',icon:'🦺',en:'Waistcoat',ar:'صديري أنيق',colors:{top:0xf0e7d8,bottom:0x253247,accent:0xd9b25e,vest:0x6a2941}},
+    {key:'casual',icon:'👕',en:'Casual',ar:'كاجوال',colors:{top:0x327b73,bottom:0xd2b98f,accent:0x1c2a4a,vest:0x327b73}}
+  ],
+  her:[
+    {key:'dress',icon:'👗',en:'Evening dress',ar:'فستان سهرة',colors:{top:0x1f6a55,bottom:0x1f6a55,accent:0xd9b25e,vest:0xe8b4bc,pants:0x33263f}},
+    {key:'vest',icon:'🧥',en:'Vest & skirt',ar:'صديري وتنورة',colors:{top:0xf1d5c9,bottom:0x1f6a55,accent:0xd9b25e,vest:0x8a3347,pants:0x33263f}},
+    {key:'trousers',icon:'👖',en:'Blouse & trousers',ar:'بلوزة وبنطلون',colors:{top:0xc8a4d8,bottom:0x33263f,accent:0xd9b25e,vest:0x8a3347,pants:0x33263f}}
+  ]
+};
+function lkSetOutfit(w,o){ CUST[w].outfit=o.key; Object.keys(o.colors).forEach(function(k){ CUST[w][k]=o.colors[k]; }); }
 function lkSave(){ try{ localStorage.setItem('ourMuseumLook',JSON.stringify(CUST)); }catch(e){} }
 function setCM(m,c){ if(!m) return; m.color.set(c); if(m.emissive&&m.emissiveIntensity>0&&!m.isMeshBasicMaterial) m.emissive.set(c); }
 function applyLook(av){
   var u=av.userData, m=u.mats; if(!m) return;
   var st=mergeLook(u.him?STY_HIM:STY_HER);
+  var outfit=st.outfit||(u.him?'suit':'dress'), outfitMeshes=u.outfitMeshes||{};
   setCM(m.skin,st.skin); setCM(m.top,st.top); setCM(m.topD,st.top); m.topD.color.multiplyScalar(.72); m.topD.emissive.copy(m.topD.color);
-  setCM(m.bottom,st.bottom); setCM(m.legs,u.him?st.bottom:st.legs); setCM(m.hair,st.hair); setCM(m.shoe,st.shoe); m.iris.color.set(st.eye);
+  setCM(m.bottom,st.bottom); setCM(m.legs,u.him?st.bottom:(outfit==='trousers'?(st.pants||0x33263f):st.legs)); setCM(m.vest,st.vest!=null?st.vest:st.top); setCM(m.hair,st.hair); setCM(m.shoe,st.shoe); m.iris.color.set(st.eye);
   if(u.him){ setCM(m.tie,st.accent!=null?st.accent:0x7a1830); } else { setCM(m.belt,st.belt); setCM(m.trim,st.accent!=null?st.accent:st.trim); }
+  if(outfitMeshes.suit) outfitMeshes.suit.visible=!!u.him&&outfit==='suit';
+  if(outfitMeshes.vest) outfitMeshes.vest.visible=u.him?outfit==='vest':outfit==='vest';
+  if(u.skirt) u.skirt.visible=!u.him&&outfit!=='trousers';
+  if(u.pantsHip) u.pantsHip.visible=!u.him&&outfit==='trousers';
 }
 function applyLookAll(){ AV.forEach(applyLook); }
 /* her details colour: store accent into belt+trim */
 (function(){
   var _mg=mergeLook; mergeLook=function(o){ var r=_mg(o); if(!o.him&&CUST.her.accent!=null){ r.belt=CUST.her.accent; r.trim=CUST.her.accent; } return r; };
 })();
+applyLookAll();
 
 /* music toggle */
 try{ muted=localStorage.getItem('ourMuseumMuted')==='1'; }catch(e){}
@@ -1444,6 +1467,12 @@ function lkBuild(){
   ['him','her'].forEach(function(w){ var b=document.createElement('button'); b.textContent=lkName(w); if(w===lkWho) b.className='on'; b.addEventListener('click',function(){ lkWho=w; lkBuild(); }); seg.appendChild(b); });
   var box=$('lkOpts'); box.innerHTML='';
   var st=mergeLook(lkWho==='him'?STY_HIM:STY_HER);
+  var outfitRow=document.createElement('div'); outfitRow.className='lk-row'; var outfitTitle=document.createElement('h4'); outfitTitle.textContent=ar?'ستايل الملابس':'Clothing style'; outfitRow.appendChild(outfitTitle);
+  var outfits=document.createElement('div'); outfits.className='lk-outfits'; var activeOutfit=st.outfit||(lkWho==='him'?'suit':'dress');
+  LK_OUTFITS[lkWho].forEach(function(o){ var b=document.createElement('button'); b.type='button'; b.className='lk-outfit'+(o.key===activeOutfit?' on':''); b.setAttribute('aria-pressed',String(o.key===activeOutfit));
+    var icon=document.createElement('span'); icon.className='lk-outfit-icon'; icon.textContent=o.icon; var label=document.createElement('span'); label.className='lk-outfit-label'; label.textContent=ar?o.ar:o.en; b.appendChild(icon); b.appendChild(label);
+    b.addEventListener('click',function(){ lkSetOutfit(lkWho,o); lkSave(); applyLookAll(); lkBuild(); }); outfits.appendChild(b); });
+  outfitRow.appendChild(outfits); box.appendChild(outfitRow);
   LK_ROWS[lkWho].forEach(function(r){
     var row=document.createElement('div'); row.className='lk-row'; var h=document.createElement('h4'); h.textContent=ar?r[4]:r[3]; row.appendChild(h);
     var sw=document.createElement('div'); sw.className='lk-sw'; var cur=st[r[1][0]]; if(r[0]==='accent'&&lkWho==='her') cur=CUST.her.accent!=null?CUST.her.accent:STY_HER.belt; if(r[0]==='accent'&&lkWho==='him'&&cur==null) cur=0x7a1830;
@@ -1479,7 +1508,7 @@ function pvTick(now){
 function openLook(){ window.lookOpen=true; lookEl.hidden=false; pvInit(); lkBuild(); applyLookAll(); setTimeout(function(){ pvSize(); },30); pvRun=true; pvLast=performance.now(); requestAnimationFrame(pvTick); }
 function closeLook(){ window.lookOpen=false; lookEl.hidden=true; pvRun=false; }
 tLook.addEventListener('click',openLook); $('lkClose').addEventListener('click',closeLook); $('lkDone').addEventListener('click',closeLook);
-$('lkRand').addEventListener('click',function(){ LK_ROWS[lkWho].forEach(function(r){ var pl=LK_PAL[r[2]], c=pl[Math.floor(Math.random()*pl.length)]; r[1].forEach(function(k){ CUST[lkWho][k]=c; }); }); lkSave(); applyLookAll(); lkBuild(); });
+$('lkRand').addEventListener('click',function(){ var oo=LK_OUTFITS[lkWho], o=oo[Math.floor(Math.random()*oo.length)]; lkSetOutfit(lkWho,o); LK_ROWS[lkWho].forEach(function(r){ var pl=LK_PAL[r[2]], c=pl[Math.floor(Math.random()*pl.length)]; r[1].forEach(function(k){ CUST[lkWho][k]=c; }); }); lkSave(); applyLookAll(); lkBuild(); });
 $('lkReset').addEventListener('click',function(){ CUST[lkWho]={}; lkSave(); applyLookAll(); lkBuild(); });
 lookEl.addEventListener('pointerdown',function(e){ e.stopPropagation(); }); lookEl.addEventListener('click',function(e){ if(e.target===lookEl) closeLook(); });
 window.addEventListener('resize',function(){ if(pvR&&!lookEl.hidden) pvSize(); });
