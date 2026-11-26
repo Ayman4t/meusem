@@ -2020,7 +2020,16 @@ var loadTimer=setInterval(function(){
   $('barFill').style.width=p+'%'; $('pct').textContent=(p<100?t('prep'):t('ready'))+p+'%';
   if(p>=100){ clearInterval(loadTimer); $('enter').disabled=false; $('enter').focus(); if(MUSEUM_MODE&&!museumStarted){ museumStarted=true; startExplore(); intro.hidden=true; intro.classList.remove('out'); } }
 },90);
-$('enter').addEventListener('click',function(){ if(state!=='intro') return; if(!MUSEUM_MODE&&!GIFT&&!ROLE&&!JOIN){ location.href='museum.html'; return; } startExplore(); });
+var enterRedirecting=false;
+$('enter').addEventListener('click',function(){
+  if(state!=='intro'||enterRedirecting) return;
+  if(!MUSEUM_MODE&&!GIFT&&!ROLE&&!JOIN){
+    enterRedirecting=true; $('enter').disabled=true; intro.classList.add('out');
+    setTimeout(function(){ location.href='museum.html'; },1700);
+    return;
+  }
+  startExplore();
+});
 
 /* ---------- Customize panel ---------- */
 var draft=null, dStore=null, recState=null;
