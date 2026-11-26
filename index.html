@@ -1738,10 +1738,11 @@ function frame(now){
     var tvx=0,tvz=0, jm=Math.hypot(joy.x,joy.y), spd=Math.max(keys.shift?4.6:2.3,2.3+2.3*clampN((jm-.85)/.1,0,1)); player.userData.rate=.55+.45*(spd-2.3)/2.3;
     if(m>.08){ var cs=Math.cos(camYaw),sn=Math.sin(camYaw); tvx=(ix*cs+iz*sn)*spd; tvz=(-ix*sn+iz*cs)*spd; }
     var ka=1-Math.exp(-dt*(m>.08?9:11)); vx+=(tvx-vx)*ka; vz+=(tvz-vz)*ka;
-    player.position.x+=vx*dt; player.position.z+=vz*dt;
+    var prevPX=player.position.x, prevPZ=player.position.z; player.position.x+=vx*dt; player.position.z+=vz*dt;
     if(Math.hypot(vx,vz)>.3){ moving=true; player.rotation.y=lerpAngle(player.rotation.y,Math.atan2(vx,vz),1-Math.exp(-dt*12)); }
     var zMin=-39;
     player.position.z=Math.max(zMin,Math.min(8.6,player.position.z)); clampPlayer(player.position);
+    if(!ROLE&&myR&&myR.n==='hand'&&myR.hs!=null){ npc.position.x+=player.position.x-prevPX; npc.position.z+=player.position.z-prevPZ; }
     pose(player,moving,dt); fxPose(dt);
     if(!roomFound&&player.position.x<-W/2-.6&&player.position.z>-21){ roomFound=true; toast(t('secret'),3500); chime([76,79,83,88],.12,.18); burst(50); }
   }
@@ -2304,7 +2305,7 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
   document.head.appendChild(st); })();
 var REACTS=['wave','heart','kiss','clap','cheer','laugh','cry','dance','jump','shy','flower','wow','hand','sit'];
 var RLAB={en:{wave:'Wave',heart:'Heart hands',kiss:'Blow a kiss',clap:'Clap',cheer:'Cheer',laugh:'Laugh',cry:'Cry',dance:'Dance',jump:'Jump',shy:'Shy',flower:'Put a flower in her hair',flowerWait:'Move closer together',wow:'Wow',hand:'Hold hands',sit:'Sit',main:'React'},ar:{wave:'لوّح',heart:'قلب بإيديكي',kiss:'ابعتي بوسة',clap:'صفّقي',cheer:'هلّلي',laugh:'اضحكي',cry:'عيّطي',dance:'ارقصي',jump:'نطّي',shy:'اتكسفي',flower:'حط وردة في شعرها',flowerWait:'قرّبوا من بعض',wow:'يا سلام',hand:'امسكي إيده',sit:'اقعدي',main:'تفاعل'}};
-var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,flower:2.6,wow:2.4,hand:5};
+var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,flower:2.6,wow:2.4,hand:30};
 var REMO={wave:'\uD83D\uDC4B',heart:'\uD83E\uDEF6',kiss:'\uD83D\uDE18',clap:'\uD83D\uDC4F',cheer:'\uD83D\uDE4C',laugh:'\uD83D\uDE02',cry:'\uD83D\uDE2D',dance:'\uD83D\uDC83',jump:'\uD83E\uDD38',shy:'\uD83D\uDE48',flower:'\uD83C\uDF38',wow:'\uD83D\uDE2E',hand:'\uD83D\uDC6B',sit:'\uD83E\uDE91'};
 var myR=null, npcR=null, tray=document.createElement('div'); tray.className='tray'; tray.hidden=true; emEl.appendChild(tray);
 var emMain=document.createElement('button'); emMain.className='em-main'; emMain.setAttribute('aria-expanded','false'); emEl.appendChild(emMain);
@@ -2318,6 +2319,10 @@ emMain.addEventListener('click',function(){ tray.hidden=!tray.hidden; emMain.set
 function doReact(n){
   if(n==='sit'){ sitToggle(); return; }
   if(state!=='explore'||seat||!RDUR[n]) return;
+  if(n==='hand'&&!ROLE){
+    if(myR&&myR.n==='hand'){ myR=null; npcR=null; return; }
+    myR={n:'hand',t:0,d:RDUR.hand}; npcR={n:'hand',t:0,d:RDUR.hand}; return;
+  }
   if(n==='flower'){
     if(!flowerNear()) return;
     var fr={n:n,t:0,d:RDUR[n]};
@@ -2385,8 +2390,9 @@ function applyReact(av,r,dt,isMe){
   var u=av.userData; r.t+=dt;
   function stop(){ if(r.n==='flower'){ if(u.flowerArmBaseY!=null) u.armL.scale.y=u.flowerArmBaseY; if(u.carriedFlower&&!r.placed) u.carriedFlower.visible=true; } if(isMe) myR=null; else npcR=null; }
   if(r.n!=='flower'&&(isMe?u.amp>.35:(ROLE&&rem.m))){ stop(); return; }
-  if(r.t>=r.d){ stop(); return; }
-  var t=r.t, S=Math.sin, CO=Math.cos, PI=Math.PI, k=clampN(t/r.d,0,1), w=ease(clampN(Math.min(t/.3,(r.d-t)/.35),0,1)), n=r.n;
+  if(r.t>=r.d&&!(r.n==='hand'&&!ROLE)){ stop(); return; }
+  var t=r.t, S=Math.sin, CO=Math.cos, PI=Math.PI, k=clampN(t/r.d,0,1), n=r.n;
+  var w=n==='hand'&&!ROLE?ease(clampN(t/.3,0,1)):ease(clampN(Math.min(t/.3,(r.d-t)/.35),0,1));
   if(n==='jump') w=clampN(Math.min(t/.06,(r.d-t)/.08),0,1);
   function A(side,x,z,e,ww){ ww=ww==null?w:ww; var a=side==='R'?u.armR:u.armL, el=side==='R'?u.elR:u.elL; a.rotation.x=mix(a.rotation.x,x,ww); a.rotation.z=mix(a.rotation.z,z,ww); el.rotation.x=mix(el.rotation.x,e,ww); }
   function H(x,y,z){ u.hd.rotation.x=mix(u.hd.rotation.x,x,w); u.hd.rotation.y=mix(u.hd.rotation.y,y,w); u.hd.rotation.z=mix(u.hd.rotation.z,z,w); }
@@ -3060,7 +3066,7 @@ function roomsTick(dt,now){
   }
   act.hidden=!z||!!window.drawOpen||!!window.phoOpen;
   if(z===1&&state==='explore'&&player.userData.amp<.25) player.rotation.y=lerpAngle(player.rotation.y,Math.PI/2,1-Math.exp(-dt*5));
-  if(!ROLE&&state==='explore'&&!(npcR&&npcR.n==='flower')){
+  if(!ROLE&&state==='explore'&&!(npcR&&(npcR.n==='flower'||npcR.n==='hand'))){
     if(z===1){
       var pp=player.position, tz=pp.z>-26?pp.z-1.1:pp.z+1.1; tz=clampN(tz,-27.8,-23.2); var tx=clampN(pp.x,-19.8,-15.5);
       if(!soloAt){ soloAt=true; npc.position.set(-14.6,0,tz); }
