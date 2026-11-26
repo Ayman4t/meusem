@@ -56,7 +56,7 @@ body.letterMode #mapBox,body.letterMode .brand,body.letterMode #hint,body.letter
 #exitPill{position:absolute;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 100px);transform:translateX(-50%);z-index:6}
 #exitBtn{border:0;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:700;background:rgba(20,16,20,.88);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.4)}
 #exitBtn kbd{background:#3a343a;border-radius:6px;padding:1px 7px;margin-left:6px;font:inherit;font-size:12px}
-#exitBox{position:absolute;inset:0;z-index:30;background:rgba(10,6,10,.6);display:flex;align-items:center;justify-content:center}
+#exitBox{position:absolute;inset:0;z-index:30;background:rgba(10,6,10,.6);display:flex;align-items:center;justify-content:center;pointer-events:auto}
 #exitBox[hidden]{display:none}
 #exitBox .eb{background:#fff6f0;color:#3a1d28;border-radius:20px;padding:22px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 #exitBox p{margin:0 0 16px;font-size:18px;font-weight:600}
@@ -1743,7 +1743,7 @@ function frame(now){
     var zMin=-39;
     player.position.z=Math.max(zMin,Math.min(8.6,player.position.z)); clampPlayer(player.position);
     if(!ROLE&&myR&&myR.n==='hand'&&myR.hs!=null){ npc.position.x+=player.position.x-prevPX; npc.position.z+=player.position.z-prevPZ; }
-    pose(player,moving,dt); fxPose(dt);
+    pose(player,moving,dt); fxPose(dt); if(!seat) clampPlayer(player.position);
     if(!roomFound&&player.position.x<-W/2-.6&&player.position.z>-21){ roomFound=true; toast(t('secret'),3500); chime([76,79,83,88],.12,.18); burst(50); }
   }
   if(state==='hostcine') liveHostCine(dt);
@@ -1809,7 +1809,7 @@ function frame(now){
     d.y+=d.v*dt; if(d.y>3.4) d.y=.4; h.position.set(d.bx+Math.sin(now*.001+d.ph)*.25,d.y,d.bz);
     h.material.opacity=heartsK*.8*Math.min(1,(3.4-d.y)/1.2)*Math.min(1,d.y/.6);
   });
-  updateLights(dt,now); fxUpdate(dt,now,moving);
+  updateLights(dt,now); fxUpdate(dt,now,moving); if(state==='explore') clampPlayer(npc.position);
   var rs0=(ROLE==='host'&&linked&&state==='explore'&&!ringBusy); if(rs0!==ringShown){ ringShown=rs0; $('tRing').hidden=!rs0; }
 
   var fovT=baseFov;
@@ -2177,6 +2177,7 @@ var BZ=[]; [-3,-12,-21,-30].forEach(function(z){ [-1,1].forEach(function(s){ BZ.
 
 /* ---------- Gallery extras: partitions, feature wall, display cases ---------- */
 var COLL=[];
+[-3,-12,-21,-30].forEach(function(z){ [-1,1].forEach(function(s){ var x=s*9.8; COLL.push({x0:x-.4,x1:x+.4,z0:z-1.8,z1:z+1.8}); }); });
 var featCv=document.createElement('canvas'); featCv.width=640; featCv.height=250; var featTex=canvasTex(featCv);
 function drawFeature(){
   var x=featCv.getContext('2d'), w=featCv.width, h=featCv.height;
@@ -2546,7 +2547,7 @@ var obsCv=document.createElement('canvas'), obsTex=null, obsRings=[], obsOrbs=[]
     function sb(w,hh,d,x,y,z,m){ var b=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),m); b.position.set(x,y,z); scene.add(b); return b; }
     sb(.9,.4,3.6,sx,.2,sz,sofaM); sb(.76,.1,3.3,sx+.02,.45,sz,cushM);
     sb(.22,.75,3.6,sx-.4,.78,sz,sofaM); sb(.9,.62,.2,sx,.5,sz-1.7,sofaM); sb(.9,.62,.2,sx,.5,sz+1.7,sofaM);
-    BZ.push([sx,sz,Math.PI/2]); })();
+    COLL.push({x0:sx-.45,x1:sx+.45,z0:sz-1.8,z1:sz+1.8}); BZ.push([sx,sz,Math.PI/2]); })();
   /* ceiling stars that twinkle */
   var a=[]; for(i=0;i<260;i++) a.push(X0+.2+Math.random()*(X1-X0-.4),h-.04,Z0+.2+Math.random()*(Z1-Z0-.4)); 
 })();
@@ -2752,7 +2753,7 @@ var drCv=$('drCv'), drCx=drCv.getContext('2d');
     x.shadowColor='rgba(255,60,110,1)'; x.shadowBlur=40; x.strokeStyle='#fff'; x.lineWidth=14; heartPath(x,w/2,h*.46,190); x.stroke(); x.shadowBlur=0;
     x.fillStyle='#fff'; x.textAlign='center'; x.font='italic 600 92px "Playfair Display","IBM Plex Sans Arabic",Georgia,serif'; x.fillText('smile',w/2,h*.55); });
   pl(5.6,3.4,new THREE.MeshBasicMaterial({map:bd}),P.far+.04,2.0,RCZ,0,Math.PI/2);
-  function ringLight(x,z){ var g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  function ringLight(x,z){ var g=new THREE.Group(); g.position.set(x,0,z); scene.add(g); COLL.push({x0:x-.36,x1:x+.36,z0:z-.36,z1:z+.36});
     var pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.04,1.9,8),dark); pole.position.y=.95; g.add(pole);
     var base=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,.05,16),dark); base.position.y=.03; g.add(base);
     var tor=new THREE.Mesh(new THREE.TorusGeometry(.36,.035,10,36),new THREE.MeshBasicMaterial({color:0xfff6ec})); tor.position.set(.05,1.9,0); tor.rotation.y=Math.PI/2; g.add(tor); g.add(glow('255,240,220',1.9,.2,1.9,0,.8)); }
@@ -2762,11 +2763,11 @@ var drCv=$('drCv'), drCx=drCv.getContext('2d');
     bxm(.8,.4,2.8,sx,.2,RCZ,wd); bxm(.7,.1,2.7,sx+.02,.45,RCZ,cu); bxm(.16,.62,2.8,sx-.36,.81,RCZ,cu); bxm(.1,.1,2.9,sx-.36,1.14,RCZ,wd);
     bxm(.1,.1,2.9,sx+.33,.58,RCZ,wd); [-1.35,1.35].forEach(function(o){ bxm(.22,.4,.14,sx,.6,RCZ+o,wd); });
     [-.7,.7].forEach(function(o){ var pw=bxm(.14,.36,.36,sx-.22,.72,RCZ+o,pl2); pw.rotation.z=-.18; });
-    BZ.push([sx,RCZ,Math.PI/2]); })();
+    COLL.push({x0:sx-.4,x1:sx+.4,z0:RCZ-1.4,z1:RCZ+1.4}); BZ.push([sx,RCZ,Math.PI/2]); })();
   (function(){ var g=new THREE.Group(); g.position.set(-13.9,0,-23.3); scene.add(g);
     [[0,.3],[.25,-.15],[-.25,-.15]].forEach(function(l){ var leg=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.3,6),dark); leg.position.set(l[1]*.5,.62,l[0]*.5); leg.rotation.set(l[0]*.4,0,-l[1]*.4); g.add(leg); });
     var body=new THREE.Mesh(new THREE.BoxGeometry(.2,.26,.36),new THREE.MeshStandardMaterial({color:0x1b1519,roughness:.4,metalness:.4})); body.position.y=1.38; g.add(body);
-    var lens=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,.2,16),new THREE.MeshStandardMaterial({color:0x2d3a4a,roughness:.2,metalness:.7})); lens.rotation.z=Math.PI/2; lens.position.set(-.18,1.38,0); g.add(lens); })();
+    var lens=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,.2,16),new THREE.MeshStandardMaterial({color:0x2d3a4a,roughness:.2,metalness:.7})); lens.rotation.z=Math.PI/2; lens.position.set(-.18,1.38,0); g.add(lens); COLL.push({x0:-14.2,x1:-13.6,z0:-23.6,z1:-23.0}); })();
   var albumTexLocal=canvasTex(albumCv); albumTex=albumTexLocal;
   albumPlane=pl(6,3,new THREE.MeshBasicMaterial({map:albumTexLocal}),P.cx,2.0,RZ0+.04,0,0);
   bxm(6.2,.12,.08,P.cx,3.56,RZ0+.03,gold); bxm(6.2,.12,.08,P.cx,.44,RZ0+.03,gold); bxm(.12,3.2,.08,P.cx-3.06,2.0,RZ0+.03,gold); bxm(.12,3.2,.08,P.cx+3.06,2.0,RZ0+.03,gold);
