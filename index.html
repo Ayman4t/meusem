@@ -683,17 +683,17 @@ function startMusic(){ if(!AC||musicTimer) return; if(AC.state==='suspended') AC
 function setDuck(v){ duck=v; if(AC) musicBus.gain.setTargetAtTime(.5*v*(muted?0:1),AC.currentTime,.3); }
 function playFoot(carpet){
   if(sfxMuted) return;
-  if(playOnlineSfx(carpet?'step-wood':'step-stone',.24,{cooldown:.12,voices:3})) return;
+  if(playOnlineSfx(carpet?'step-wood':'step-stone',.12,{cooldown:.12,voices:3})) return;
   if(!AC) return;
   if(!noiseBuf){ var n=Math.floor(AC.sampleRate*.12); noiseBuf=AC.createBuffer(1,n,AC.sampleRate); var d=noiseBuf.getChannelData(0); for(var i=0;i<n;i++) d[i]=Math.random()*2-1; }
   var tm=AC.currentTime, s=AC.createBufferSource(), f=AC.createBiquadFilter(), g=AC.createGain();
   s.buffer=noiseBuf; f.type=carpet?'lowpass':'bandpass'; f.frequency.value=carpet?350:(900+Math.random()*500); f.Q.value=carpet?.5:1.2;
-  var v=carpet?.18:.32;
+  var v=carpet?.08:.16;
   g.gain.setValueAtTime(0,tm); g.gain.linearRampToValueAtTime(v,tm+.004); g.gain.exponentialRampToValueAtTime(.001,tm+(carpet?.09:.11));
   s.connect(f); f.connect(g); g.connect(sfxBus); s.start(tm); s.stop(tm+.13);
   var o=AC.createOscillator(), og=AC.createGain();
   o.frequency.setValueAtTime(110,tm); o.frequency.exponentialRampToValueAtTime(55,tm+.08);
-  og.gain.setValueAtTime(carpet?.08:.14,tm); og.gain.exponentialRampToValueAtTime(.001,tm+.09);
+  og.gain.setValueAtTime(carpet?.035:.07,tm); og.gain.exponentialRampToValueAtTime(.001,tm+.09);
   o.connect(og); og.connect(sfxBus); o.start(tm); o.stop(tm+.1);
 }
 function chime(notes,gap,vol){
@@ -1838,7 +1838,7 @@ function fwTick(){
   });
   if(fwOn||fwP.length||fwR.length) requestAnimationFrame(fwTick); else { fwRun=false; fwx.clearRect(0,0,w,h); }
 }
-function fwStart(){ if(fwOn) return; fwOn=true; fwStartAt=performance.now(); fwNext=fwStartAt+500; if(!fwRun){ fwRun=true; requestAnimationFrame(fwTick); } }
+function fwStart(){ unlockOnlineSfx(); if(fwOn) return; fwOn=true; fwStartAt=performance.now(); fwNext=fwStartAt+500; if(!fwRun){ fwRun=true; requestAnimationFrame(fwTick); } }
 
 function burst(n){
   if(reduceMotion) n=Math.round(n/3);
@@ -2286,7 +2286,7 @@ function tkDate(){ try{ $('tkDate').textContent=new Date().toLocaleDateString(LA
 (function(){ var b=$('introHearts'); for(var i=0;i<22;i++){ var h=document.createElement('span'); h.textContent='♥'; h.style.left=(Math.random()*96)+'%'; h.style.setProperty('--sz',(12+Math.random()*22).toFixed(0)+'px'); h.style.setProperty('--d',(9+Math.random()*9).toFixed(1)+'s'); h.style.setProperty('--dl',(-Math.random()*14).toFixed(1)+'s'); b.appendChild(h); } })();
 (function(){ var b=$('loveFx'); for(var i=0;i<14;i++){ var h=document.createElement('span'); h.textContent='♥'; h.style.left=(Math.random()*100)+'%'; h.style.setProperty('--sz',(10+Math.random()*16).toFixed(0)+'px'); h.style.setProperty('--d',(14+Math.random()*12).toFixed(1)+'s'); h.style.setProperty('--dl',(-Math.random()*20).toFixed(1)+'s'); b.appendChild(h); } })();
 tkDate(); $('langBtn').addEventListener('click',tkDate);
-$('askBack').addEventListener('click',function(){ fwOn=false; });
+$('askBack').addEventListener('click',function(){ fwStart(); });
 $('tRing').textContent=lt('ring');
 $('tRing').addEventListener('click',function(){ if(ROLE!=='host'||!linked||state!=='explore'||ringBusy) return; ringBusy=true; send({t:'ring'}); closeLightbox(); fadeThen(hostEnterCine,750); });
 /* he opens an invitation */
@@ -2509,14 +2509,10 @@ function doHeart(){ doReact('heart'); }
 var stl=document.createElement('style'); stl.textContent='#emotes{position:absolute;z-index:26;inset-inline-end:max(12px,env(safe-area-inset-right,0px));bottom:calc(max(18px,env(safe-area-inset-bottom,0px)) + 54px);display:flex;flex-direction:column;gap:8px}#emotes button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(20,18,23,.7);backdrop-filter:blur(8px);font-size:20px;padding:0}#emotes .tray button:disabled{opacity:.32;filter:grayscale(1);cursor:not-allowed}.emote{position:absolute;left:0;top:0;will-change:transform}.emote span{display:block;font-size:30px;animation:emRise 2.2s ease-out forwards}@keyframes emRise{0%{opacity:0;transform:translateY(8px) scale(.5)}15%{opacity:1;transform:translateY(0) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}body.garden #ask{background:linear-gradient(to bottom,rgba(40,15,50,.5) 0,rgba(40,15,50,0) 40%,rgba(40,15,50,.35) 100%)}';
 document.head.appendChild(stl);
 var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stage.appendChild(emEl);
-/* put the React button in one row with the sound button (top bar) */
+/* Keep React in its original lower corner; group only sound controls in the tools bar. */
 (function(){ var tm=document.getElementById('tMusic'), ts=document.getElementById('tSfx'), tools=document.getElementById('tools'); if(!tm||!ts||!tools) return;
-  var row=document.createElement('div'); row.id='topRow'; tools.insertBefore(row,tm); row.appendChild(emEl); row.appendChild(ts); row.appendChild(tm);
-  var st=document.createElement('style'); st.textContent='#topRow{display:flex;align-items:center;gap:8px;position:relative;pointer-events:none}'+
-  '#topRow #emotes{position:static;inset:auto;z-index:auto;display:flex;flex-direction:row;align-items:center;gap:0;pointer-events:auto}'+
-  '#topRow #emotes .em-main{height:34px;padding:0 14px;font-size:12.5px;gap:6px}#topRow #emotes .em-main svg{width:15px;height:15px}'+
-  '#topRow #emotes .tray{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:30}#topRow #tMusic,#topRow #tSfx{pointer-events:auto}';
-  document.head.appendChild(st); })();
+  var row=document.createElement('div'); row.id='soundControls'; tools.insertBefore(row,tm); row.appendChild(ts); row.appendChild(tm);
+  var st=document.createElement('style'); st.textContent='#soundControls{display:flex;align-items:center;gap:8px;position:relative}'; document.head.appendChild(st); })();
 var REACTS=['wave','heart','kiss','clap','cheer','laugh','cry','dance','jump','shy','flower','wow','hand','sit'];
 var RLAB={en:{wave:'Wave',heart:'Heart hands',kiss:'Blow a kiss',clap:'Clap',cheer:'Cheer',laugh:'Laugh',cry:'Cry',dance:'Dance',jump:'Jump',shy:'Shy',flower:'Put a flower in her hair',flowerWait:'Move closer together',wow:'Wow',hand:'Hold hands',sit:'Sit',main:'React'},ar:{wave:'لوّح',heart:'قلب بإيديكي',kiss:'ابعتي بوسة',clap:'صفّقي',cheer:'هلّلي',laugh:'اضحكي',cry:'عيّطي',dance:'ارقصي',jump:'نطّي',shy:'اتكسفي',flower:'حط وردة في شعرها',flowerWait:'قرّبوا من بعض',wow:'يا سلام',hand:'امسكي إيده',sit:'اقعدي',main:'تفاعل'}};
 var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,flower:2.6,wow:2.4,hand:30};
