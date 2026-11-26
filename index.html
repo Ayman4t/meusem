@@ -750,7 +750,7 @@ var tvCv=document.createElement('canvas'); tvCv.width=1280; tvCv.height=720; var
 var DOORX=-5.5, EXITPOS={x:DOORX,z:ZF};
 (function(){
   var blk=new THREE.MeshStandardMaterial({color:0x0e0d10,roughness:.4,metalness:.3});
-  var g=new THREE.Group(); g.position.set(20.92,2.3,-16.5); g.rotation.y=-Math.PI/2; g.scale.set(.8,.8,.8); scene.add(g);
+  var g=new THREE.Group(); g.position.set(20.92,2.3,-16.5); g.rotation.y=-Math.PI/2; g.scale.setScalar(1.08); scene.add(g);
   var fr=new THREE.Mesh(new THREE.BoxGeometry(5.2,3.05,.12),blk); g.add(fr);
   var sc=new THREE.Mesh(new THREE.PlaneGeometry(4.96,2.79),new THREE.MeshBasicMaterial({map:tvTx})); sc.position.z=.07; g.add(sc);
   var glow=new THREE.PointLight(0xffe0d0,.5,9); glow.position.set(-1.5,0,.8); g.add(glow);
