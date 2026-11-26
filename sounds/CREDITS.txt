@@ -3,3 +3,4 @@ Real recorded sounds used by Museum of Love
 - kiss (mouth pop): Freesound, CC0, via github.com/barty-bart/motion-graphics (fs-258269)
 - yay (group cheer, zut50 #162395), tada (plasterbrain #397355), bell (5ro4 #611113), pop (deraj #202230): Freesound, CC0
 - clap: Mixkit "One clap" (Mixkit Free License), loaded from assets.mixkit.co at runtime
+- wave-cloth (clothing movement), slide-whistle: FilmCow Recorded SFX
