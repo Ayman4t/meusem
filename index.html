@@ -295,6 +295,9 @@ button:active:not(:disabled){transform:scale(.97)}
 .lk-row{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .lk-row:last-child{border-bottom:0}
 .lk-row h4{font-size:12px;margin-bottom:10px;color:#cbbfc9}
+.lk-cinema-note{margin:0 0 10px;font-size:12px;line-height:1.4;color:#8a5a68}
+.lk-cinema-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lk-cinema-status{font-size:12px;color:#9a5a6c;overflow-wrap:anywhere}
 .lk-sw{gap:10px}
 .lk-sw button{width:36px;height:36px;border-width:2px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.18)}
 .lk-sw button.on{border-color:#fff;box-shadow:0 0 0 3px var(--rose)}
@@ -539,7 +542,7 @@ var I18N={
   copy:'Copy link',copied:'Link copied',long:'Copied. The link is long because of the photos.',needHost:'Copied, but this page is not hosted online, so the link will not open for others. Host it online first.',
   dl:'Download as one file',building:'Building...',saved:'Saved',norec:'Recording is not supported in this browser',
   lightNames:['Evening','Day','Candle'],edLang:'Language',edLetter:'His letter (before the question)',edSecret:'Secret room message',edCoupon:'Coupon on the pedestal',edClosing:'Closing message (shown under the question)',open:'🎀 Open',exitQ:'Leave the museum?',stay:'Stay',leave:'Leave',edNeed:'Require all photos before the finale',
-  edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',cinemaVideo:'Cinema / gallery screen video',cinemaVideoNote:'Choose any video to play on the cinema TV and the large gallery screen. It loops silently and is saved on this device.',videoPick:'Choose video',videoSaved:'Video selected',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
+  edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',cinemaVideo:'Cinema room video',cinemaVideoNote:'Choose a video to play on the room TV. It loops silently and is saved on this device.',videoPick:'Add video',videoChange:'Change video',videoSaved:'Video selected',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
   date:'Date (optional)',capt:'Caption',songPick:'Choose song',tooBig:'File is large, it may be slow',micFail:'Microphone not available'},
  ar:{lang:'English',enter:'ادخل',customize:'خصّص',from:'من',to:'إلى',prep:'جاري تجهيز المتحف ',ready:'جاهز ',close:'إغلاق',reset:'رجّع للنموذج',save:'احفظ وشوف',
   again:'ابدأ من الأول',look:'شوف أقرب',listen:'🔊 اسمع',sound:'الصوت',lights:'الإضاءة',guest:'✍ دفتر الزوار',skip:'⏭ روح للنهاية',shot:'📸 احفظ اللحظة',rec:'● سجّل',stop:'■ إيقاف',
@@ -551,7 +554,7 @@ var I18N={
   copy:'انسخ اللينك',copied:'اتنسخ اللينك',long:'اتنسخ. اللينك طويل بسبب الصور.',needHost:'اتنسخ، بس الصفحة مش منشورة أونلاين فاللينك مش هيفتح عند حد. انشرها أونلاين الأول.',
   dl:'نزّل كملف واحد',building:'بجهّز...',saved:'اتحفظ',norec:'التسجيل مش مدعوم في المتصفح ده',
   lightNames:['مساء','نهار','شموع'],edLang:'اللغة',edLetter:'جواب منه (قبل السؤال)',edSecret:'رسالة الأوضة السرية',edCoupon:'القسيمة على القاعدة',edClosing:'الرسالة الأخيرة (تحت السؤال)',open:'🎀 افتحي',exitQ:'تخرجي من المتحف؟',stay:'ابقي',leave:'اخرجي',edNeed:'لازم تشوف كل الصور قبل النهاية',
-  edSong:'أغنيتها المفضلة (بتشتغل جنب الإطار الخامس)',edLetterVoice:'صوت للجواب',cinemaVideo:'فيديو شاشة السينما والمعرض',cinemaVideoNote:'اختار أي فيديو يشتغل على تلفزيون السينما والشاشة الكبيرة في المعرض. هيتكرر من غير صوت ويتحفظ على الجهاز ده.',videoPick:'اختار فيديو',videoSaved:'تم اختيار الفيديو',photoBtn:'صورة / فيديو',clear:'مسح',recV:'🎙 صوت',stopV:'■ إيقاف',voiceOn:'الصوت محفوظ',songOn:'الأغنية محفوظة',
+  edSong:'أغنيتها المفضلة (بتشتغل جنب الإطار الخامس)',edLetterVoice:'صوت للجواب',cinemaVideo:'فيديو غرفة السينما',cinemaVideoNote:'اختار فيديو يشتغل على تلفزيون الغرفة. هيتكرر من غير صوت ويتحفظ على الجهاز ده.',videoPick:'أضف فيديو',videoChange:'غيّر الفيديو',videoSaved:'تم اختيار الفيديو',photoBtn:'صورة / فيديو',clear:'مسح',recV:'🎙 صوت',stopV:'■ إيقاف',voiceOn:'الصوت محفوظ',songOn:'الأغنية محفوظة',
   date:'التاريخ (اختياري)',capt:'التعليق',songPick:'اختار أغنية',tooBig:'الملف كبير، ممكن يبطّأ',micFail:'الميكروفون مش متاح'}
 };
 var TEXT_FIELDS=[
@@ -803,23 +806,15 @@ function syncCinemaVideo(){
   tvVideoSrc=u; tvVideo.src=u; tvVideo.addEventListener('loadeddata',function(){ if(tvVideo&&tvVideoSrc===u) tvVideo.play().catch(function(){}); });
   tvVideo.load(); tvVideo.play().catch(function(){});
 }
-var cinemaScreenShowing=false;
-function paintCinemaVideo(targetCanvas,targetTexture){
-  var x=targetCanvas.getContext('2d'), w=targetCanvas.width, h=targetCanvas.height;
+function paintCinemaVideo(){
+  var x=tvCv.getContext('2d'), w=tvCv.width, h=tvCv.height;
   var scale=Math.max(w/tvVideo.videoWidth,h/tvVideo.videoHeight), vw=tvVideo.videoWidth*scale, vh=tvVideo.videoHeight*scale;
-  x.fillStyle='#000'; x.fillRect(0,0,w,h); x.drawImage(tvVideo,(w-vw)/2,(h-vh)/2,vw,vh); targetTexture.needsUpdate=true;
+  x.fillStyle='#000'; x.fillRect(0,0,w,h); x.drawImage(tvVideo,(w-vw)/2,(h-vh)/2,vw,vh); tvTx.needsUpdate=true;
 }
 function tvDraw(now){
   var x=tvCv.getContext('2d'), w=tvCv.width, h=tvCv.height, list=frames.filter(function(f){ return f.canvas; });
   if(tvVideo&&tvVideo.readyState>=2&&tvVideo.videoWidth){
-    paintCinemaVideo(tvCv,tvTx);
-    if(state==='explore'){ paintCinemaVideo(screenCanvas,screenTex); cinemaScreenShowing=true; }
-    else if(cinemaScreenShowing){ drawScreen(); cinemaScreenShowing=false; }
-    return;
-  }
-  if(cinemaScreenShowing){
-    if(store.cinemaVideo&&state==='explore') return;
-    drawScreen(); cinemaScreenShowing=false;
+    paintCinemaVideo(); return;
   }
   if(!list.length) return;
   if(now-tvLast>4200){ tvLast=now; tvIdx=(tvIdx+1)%list.length; tvFade=0; }
@@ -1591,6 +1586,18 @@ function lkBuild(){
   var seg=$('lkSeg'); seg.innerHTML='';
   ['him','her'].forEach(function(w){ var b=document.createElement('button'); b.textContent=lkName(w); if(w===lkWho) b.className='on'; b.addEventListener('click',function(){ lkWho=w; lkBuild(); }); seg.appendChild(b); });
   var box=$('lkOpts'); box.innerHTML='';
+  var cinemaRow=document.createElement('div'); cinemaRow.className='lk-row';
+  var cinemaTitle=document.createElement('h4'); cinemaTitle.textContent=t('cinemaVideo'); cinemaRow.appendChild(cinemaTitle);
+  var cinemaNote=document.createElement('p'); cinemaNote.className='lk-cinema-note'; cinemaNote.textContent=t('cinemaVideoNote'); cinemaRow.appendChild(cinemaNote);
+  var cinemaControls=document.createElement('div'); cinemaControls.className='lk-cinema-controls';
+  var cinemaInput=document.createElement('input'); cinemaInput.type='file'; cinemaInput.accept='video/*'; cinemaInput.hidden=true; cinemaInput.setAttribute('aria-label',t('cinemaVideo'));
+  var cinemaPick=document.createElement('button'); cinemaPick.type='button'; cinemaPick.className='ghost sm'; cinemaPick.textContent=store.cinemaVideo?t('videoChange'):t('videoPick');
+  var cinemaClear=document.createElement('button'); cinemaClear.type='button'; cinemaClear.className='ghost sm'; cinemaClear.textContent=t('clear'); cinemaClear.hidden=!store.cinemaVideo;
+  var cinemaStatus=document.createElement('span'); cinemaStatus.className='lk-cinema-status'; cinemaStatus.textContent=store.cinemaVideo?(store.cinemaVideo.name||t('videoSaved')):'';
+  cinemaPick.addEventListener('click',function(){ cinemaInput.click(); });
+  cinemaInput.addEventListener('change',function(){ var f=cinemaInput.files&&cinemaInput.files[0]; if(!f) return; if(f.size>40*1048576) toast(t('tooBig')); store.cinemaVideo=f; idbPut('cinemaVideo',f); syncCinemaVideo(); lkBuild(); });
+  cinemaClear.addEventListener('click',function(){ delete store.cinemaVideo; idbDel('cinemaVideo'); syncCinemaVideo(); lkBuild(); });
+  cinemaControls.appendChild(cinemaInput); cinemaControls.appendChild(cinemaPick); cinemaControls.appendChild(cinemaClear); cinemaControls.appendChild(cinemaStatus); cinemaRow.appendChild(cinemaControls); box.appendChild(cinemaRow);
   var st=mergeLook(lkWho==='him'?STY_HIM:STY_HER);
   var outfitRow=document.createElement('div'); outfitRow.className='lk-row'; var outfitTitle=document.createElement('h4'); outfitTitle.textContent=ar?'ستايل الملابس':'Clothing style'; outfitRow.appendChild(outfitTitle);
   var outfits=document.createElement('div'); outfits.className='lk-outfits'; var activeOutfit=st.outfit||(lkWho==='him'?'suit':'dress');
