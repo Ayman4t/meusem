@@ -558,7 +558,7 @@ function mergeCfg(c,s){
   if(typeof s.needAll==='string') c.needAll=s.needAll;
   return c;
 }
-var STORE_KEY='ourMuseum.v1', HASH=null, ROLE=null, JOIN=null;
+var STORE_KEY='ourMuseum.v1', HASH=null, ROLE=null, JOIN=null, MUSEUM_MODE=new URLSearchParams(location.search).get('museum')==='1';
 if(/^#m=/.test(location.hash)){ try{ HASH=JSON.parse(b64dec(location.hash.slice(3).split('&')[0])); }catch(e){ HASH=null; } }
 (function(){ var m=/[#&]join=([\w-]+)\.([0-9a-f]+)/.exec(location.hash); if(m){ JOIN={id:m[1],tok:m[2]}; ROLE='guest'; } })();
 var GIFT=!!(PRESET||HASH);
@@ -796,7 +796,7 @@ $('exitGo').addEventListener('click',function(){
   var b=document.createElement('div'); b.style.cssText='position:fixed;inset:0;z-index:999;background:#1a0d14;color:#fff3f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;font-family:Georgia,serif;padding:24px';
   b.innerHTML='<div style="font-size:44px">🤍</div><div style="font-size:26px;font-style:italic">Thank you for visiting our museum</div><div style="opacity:.7;font-size:15px">شكراً لزيارتك</div><button id="byeBack" style="border:0;border-radius:999px;padding:12px 26px;font-size:15px;font-weight:700;background:#e8506b;color:#fff">Visit again</button>';
   document.body.appendChild(b);
-  document.getElementById('byeBack').addEventListener('click',function(){ location.reload(); });
+  document.getElementById('byeBack').addEventListener('click',function(){ if(MUSEUM_MODE) window.top.location.href=new URL('index.html',location.href).href; else location.reload(); });
   try{ window.close(); }catch(e){}
 });
 
@@ -1442,13 +1442,14 @@ applyLookAll();
 
 /* music toggle */
 try{ muted=localStorage.getItem('ourMuseumMuted')==='1'; }catch(e){}
-var tMusic=document.createElement('button'); tMusic.className='tool icon'; tMusic.id='tMusic';
+var tMusic=document.createElement('button'), tHome=null; tMusic.className='tool icon'; tMusic.id='tMusic';
 var tLook=document.createElement('button'); tLook.className='tool'; tLook.id='tLook';
 $('tools').insertBefore(tMusic,$('tools').firstChild);
 function refreshExtra(){
   var ar=LANG==='ar';
   tMusic.textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; tMusic.title=tMusic.ariaLabel=muted?(ar?'تشغيل الموسيقى':'Turn music on'):(ar?'إيقاف الموسيقى':'Turn music off');
   tLook.textContent='\uD83D\uDC57 '+(ar?'تخصيص الشخصيات':'Customize');
+  if(MUSEUM_MODE){ if(!tHome){ tHome=document.createElement('button'); tHome.className='tool'; tHome.id='tHome'; tHome.addEventListener('click',function(){ window.top.location.href=new URL('index.html',location.href).href; }); $('tools').insertBefore(tHome,$('tools').firstChild); } tHome.textContent=ar?'← الإعداد':'← Intro'; }
   if(window.lkRefresh) lkRefresh(); if(window.emRefresh) emRefresh();
 }
 tMusic.addEventListener('click',function(){ setMuted(!muted); try{ localStorage.setItem('ourMuseumMuted',muted?'1':'0'); }catch(e){} if(!muted&&typeof initAudio==='function'){ initAudio(); startMusic(); } refreshExtra(); });
@@ -1911,13 +1912,14 @@ applyI18n(); $('pct').textContent=t('prep')+'0%';
   loader.then(function(all){ Object.keys(all).forEach(function(k){ store[k]=all[k]; }); return applyCfg(); }).then(function(){ loaded=true; }).catch(function(){ loaded=true; });
 })();
 var t0=performance.now();
+var museumStarted=false;
 var loadTimer=setInterval(function(){
   var target=Math.min(1,(performance.now()-t0)/2300); if(!loaded) target=Math.min(target,.92);
   progress+=(target-progress)*.35; var p=Math.round(progress*100); if(loaded&&target>=1) p=100;
   $('barFill').style.width=p+'%'; $('pct').textContent=(p<100?t('prep'):t('ready'))+p+'%';
-  if(p>=100){ clearInterval(loadTimer); $('enter').disabled=false; $('enter').focus(); }
+  if(p>=100){ clearInterval(loadTimer); $('enter').disabled=false; $('enter').focus(); if(MUSEUM_MODE&&!museumStarted){ museumStarted=true; startExplore(); intro.hidden=true; intro.classList.remove('out'); } }
 },90);
-$('enter').addEventListener('click',function(){ if(state==='intro') startExplore(); });
+$('enter').addEventListener('click',function(){ if(state!=='intro') return; if(!MUSEUM_MODE&&!GIFT&&!ROLE&&!JOIN){ location.href='museum.html'; return; } startExplore(); });
 
 /* ---------- Customize panel ---------- */
 var draft=null, dStore=null, recState=null;
