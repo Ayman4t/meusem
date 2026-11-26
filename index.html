@@ -464,6 +464,7 @@ body{background:#1a0d14}
       <button class="no" id="no"></button>
     </div>
     <div id="askTools" hidden>
+      <button class="ghost sm" id="askSfx" type="button"></button>
       <button class="ghost sm" id="askShot"></button>
       <button class="ghost sm" id="askRec"></button>
     </div>
@@ -683,17 +684,17 @@ function startMusic(){ if(!AC||musicTimer) return; if(AC.state==='suspended') AC
 function setDuck(v){ duck=v; if(AC) musicBus.gain.setTargetAtTime(.5*v*(muted?0:1),AC.currentTime,.3); }
 function playFoot(carpet){
   if(sfxMuted) return;
-  if(playOnlineSfx(carpet?'step-wood':'step-stone',.12,{cooldown:.12,voices:3})) return;
+  if(playOnlineSfx(carpet?'step-wood':'step-stone',.04,{cooldown:.12,voices:3})) return;
   if(!AC) return;
   if(!noiseBuf){ var n=Math.floor(AC.sampleRate*.12); noiseBuf=AC.createBuffer(1,n,AC.sampleRate); var d=noiseBuf.getChannelData(0); for(var i=0;i<n;i++) d[i]=Math.random()*2-1; }
   var tm=AC.currentTime, s=AC.createBufferSource(), f=AC.createBiquadFilter(), g=AC.createGain();
   s.buffer=noiseBuf; f.type=carpet?'lowpass':'bandpass'; f.frequency.value=carpet?350:(900+Math.random()*500); f.Q.value=carpet?.5:1.2;
-  var v=carpet?.08:.16;
+  var v=carpet?.025:.05;
   g.gain.setValueAtTime(0,tm); g.gain.linearRampToValueAtTime(v,tm+.004); g.gain.exponentialRampToValueAtTime(.001,tm+(carpet?.09:.11));
   s.connect(f); f.connect(g); g.connect(sfxBus); s.start(tm); s.stop(tm+.13);
   var o=AC.createOscillator(), og=AC.createGain();
   o.frequency.setValueAtTime(110,tm); o.frequency.exponentialRampToValueAtTime(55,tm+.08);
-  og.gain.setValueAtTime(carpet?.035:.07,tm); og.gain.exponentialRampToValueAtTime(.001,tm+.09);
+  og.gain.setValueAtTime(carpet?.01:.022,tm); og.gain.exponentialRampToValueAtTime(.001,tm+.09);
   o.connect(og); og.connect(sfxBus); o.start(tm); o.stop(tm+.1);
 }
 function chime(notes,gap,vol){
@@ -1597,6 +1598,7 @@ $('tools').appendChild(tTour); tTour.addEventListener('click',toggleMuseumTour);
 $('tourStop').addEventListener('click',function(){ if(museumTour.active){ finishMuseumTour(false); return; } museumTour.complete=false; $('tourGuide').hidden=true; refreshTourButton(); });
 function refreshExtra(){
   var ar=LANG==='ar';
+  if($('askSfx')){ $('askSfx').textContent=(sfxMuted?'\uD83D\uDD07 ':'\uD83D\uDD0A ')+(ar?'\u0627\u0644\u0645\u0624\u062b\u0631\u0627\u062a \u0627\u0644\u0635\u0648\u062a\u064a\u0629':'Sound effects'); $('askSfx').setAttribute('aria-pressed',String(!sfxMuted)); }
   tMusic.textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; tMusic.title=tMusic.ariaLabel=muted?(ar?'تشغيل الموسيقى':'Turn music on'):(ar?'إيقاف الموسيقى':'Turn music off');
   tSfx.textContent=sfxMuted?'\uD83D\uDD07':'\uD83D\uDD0A'; tSfx.title=tSfx.ariaLabel=sfxMuted?(ar?'تشغيل أصوات المتحف':'Turn museum sounds on'):(ar?'إيقاف أصوات المتحف':'Turn museum sounds off');
   tLook.textContent='\uD83D\uDC57 '+(ar?'تخصيص الشخصيات':'Customize');
@@ -1605,6 +1607,7 @@ function refreshExtra(){
   if(window.lkRefresh) lkRefresh(); if(window.emRefresh) emRefresh();
 }
 tMusic.addEventListener('click',function(){ setMuted(!muted); try{ localStorage.setItem('ourMuseumMuted',muted?'1':'0'); }catch(e){} if(!muted&&typeof initAudio==='function'){ initAudio(); startMusic(); } refreshExtra(); });
+$('askSfx').addEventListener('click',function(){ tSfx.click(); });
 tSfx.addEventListener('click',function(){ setSfxMuted(!sfxMuted); try{ localStorage.setItem('ourMuseumSfxMuted',sfxMuted?'1':'0'); }catch(e){} refreshExtra(); });
 
 /* customizer panel with its own live 3D preview */
@@ -1818,7 +1821,7 @@ function fwBurst(x,y,heart){
     else { var a=Math.random()*6.283, sp=(1+Math.random()*4.4)*d; vx=Math.cos(a)*sp; vy=Math.sin(a)*sp; }
     fwP.push({x:x,y:y,vx:vx,vy:vy,l:1,dec:.009+Math.random()*.01,h:(i%2?h1:h2),w:(1.4+Math.random()*1.6)*d});
   }
-  if(!playOnlineSfx('firework',.3,{cooldown:.18,voices:2})) boom();
+  boom();
 }
 function fwLaunch(w,h){ var d=window.devicePixelRatio||1; fwR.push({x:(.12+.76*Math.random())*w,y:h,ty:(.14+.3*Math.random())*h,heart:Math.random()<.34,d:d}); }
 function fwTick(){
@@ -1838,7 +1841,7 @@ function fwTick(){
   });
   if(fwOn||fwP.length||fwR.length) requestAnimationFrame(fwTick); else { fwRun=false; fwx.clearRect(0,0,w,h); }
 }
-function fwStart(){ unlockOnlineSfx(); if(fwOn) return; fwOn=true; fwStartAt=performance.now(); fwNext=fwStartAt+500; if(!fwRun){ fwRun=true; requestAnimationFrame(fwTick); } }
+function fwStart(){ unlockOnlineSfx(); try{ if(typeof initAudio==='function') initAudio(); if(AC&&AC.state==='suspended') AC.resume(); }catch(e){} if(fwOn) return; fwOn=true; fwStartAt=performance.now(); fwNext=fwStartAt+500; if(!fwRun){ fwRun=true; requestAnimationFrame(fwTick); } }
 
 function burst(n){
   if(reduceMotion) n=Math.round(n/3);
