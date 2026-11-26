@@ -483,6 +483,7 @@ body{background:#1a0d14}
       <div class="ed-grid" id="edText"></div>
       <div class="ed-grid" id="edExtra"></div>
       <div id="edAudio" class="ed-grid"></div>
+      <h3 id="edCinemaH"></h3><p class="note" id="edCinemaNote"></p><div id="edCinema" class="ed-grid"></div>
       <h3 id="edCharsH"></h3><p class="note" id="edCharsNote"></p><div class="row"><button class="ghost" id="edChars"></button></div>
       <h3 id="edWalls"></h3>
       <div class="ed-photos" id="edPhotos"></div>
@@ -538,7 +539,7 @@ var I18N={
   copy:'Copy link',copied:'Link copied',long:'Copied. The link is long because of the photos.',needHost:'Copied, but this page is not hosted online, so the link will not open for others. Host it online first.',
   dl:'Download as one file',building:'Building...',saved:'Saved',norec:'Recording is not supported in this browser',
   lightNames:['Evening','Day','Candle'],edLang:'Language',edLetter:'His letter (before the question)',edSecret:'Secret room message',edCoupon:'Coupon on the pedestal',edClosing:'Closing message (shown under the question)',open:'🎀 Open',exitQ:'Leave the museum?',stay:'Stay',leave:'Leave',edNeed:'Require all photos before the finale',
-  edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
+  edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',cinemaVideo:'Cinema room video',cinemaVideoNote:'Choose a video to play on the cinema screen. It loops silently and is saved on this device.',videoPick:'Choose video',videoSaved:'Video selected',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
   date:'Date (optional)',capt:'Caption',songPick:'Choose song',tooBig:'File is large, it may be slow',micFail:'Microphone not available'},
  ar:{lang:'English',enter:'ادخل',customize:'خصّص',from:'من',to:'إلى',prep:'جاري تجهيز المتحف ',ready:'جاهز ',close:'إغلاق',reset:'رجّع للنموذج',save:'احفظ وشوف',
   again:'ابدأ من الأول',look:'شوف أقرب',listen:'🔊 اسمع',sound:'الصوت',lights:'الإضاءة',guest:'✍ دفتر الزوار',skip:'⏭ روح للنهاية',shot:'📸 احفظ اللحظة',rec:'● سجّل',stop:'■ إيقاف',
@@ -550,7 +551,7 @@ var I18N={
   copy:'انسخ اللينك',copied:'اتنسخ اللينك',long:'اتنسخ. اللينك طويل بسبب الصور.',needHost:'اتنسخ، بس الصفحة مش منشورة أونلاين فاللينك مش هيفتح عند حد. انشرها أونلاين الأول.',
   dl:'نزّل كملف واحد',building:'بجهّز...',saved:'اتحفظ',norec:'التسجيل مش مدعوم في المتصفح ده',
   lightNames:['مساء','نهار','شموع'],edLang:'اللغة',edLetter:'جواب منه (قبل السؤال)',edSecret:'رسالة الأوضة السرية',edCoupon:'القسيمة على القاعدة',edClosing:'الرسالة الأخيرة (تحت السؤال)',open:'🎀 افتحي',exitQ:'تخرجي من المتحف؟',stay:'ابقي',leave:'اخرجي',edNeed:'لازم تشوف كل الصور قبل النهاية',
-  edSong:'أغنيتها المفضلة (بتشتغل جنب الإطار الخامس)',edLetterVoice:'صوت للجواب',photoBtn:'صورة / فيديو',clear:'مسح',recV:'🎙 صوت',stopV:'■ إيقاف',voiceOn:'الصوت محفوظ',songOn:'الأغنية محفوظة',
+  edSong:'أغنيتها المفضلة (بتشتغل جنب الإطار الخامس)',edLetterVoice:'صوت للجواب',cinemaVideo:'فيديو قاعة السينما',cinemaVideoNote:'اختار فيديو يشتغل على شاشة السينما. هيتكرر من غير صوت ويتحفظ على الجهاز ده.',videoPick:'اختار فيديو',videoSaved:'تم اختيار الفيديو',photoBtn:'صورة / فيديو',clear:'مسح',recV:'🎙 صوت',stopV:'■ إيقاف',voiceOn:'الصوت محفوظ',songOn:'الأغنية محفوظة',
   date:'التاريخ (اختياري)',capt:'التعليق',songPick:'اختار أغنية',tooBig:'الملف كبير، ممكن يبطّأ',micFail:'الميكروفون مش متاح'}
 };
 var TEXT_FIELDS=[
@@ -762,7 +763,7 @@ var stripMat=new THREE.MeshBasicMaterial({color:0xfff1dc});
 })();
 
 /* ---------- TV on the wall + exit door ---------- */
-var tvCv=document.createElement('canvas'); tvCv.width=1280; tvCv.height=720; var tvTx=canvasTex(tvCv), tvIdx=0, tvFade=1, tvLast=0, TVPOS={x:W/2-.08,z:.6};
+var tvCv=document.createElement('canvas'); tvCv.width=1280; tvCv.height=720; var tvTx=canvasTex(tvCv), tvIdx=0, tvFade=1, tvLast=0, tvVideo=null, tvVideoSrc='', TVPOS={x:W/2-.08,z:.6};
 var DOORX=-5.5, EXITPOS={x:DOORX,z:ZF};
 (function(){
   var blk=new THREE.MeshStandardMaterial({color:0x0e0d10,roughness:.4,metalness:.3});
@@ -789,8 +790,25 @@ var DOORX=-5.5, EXITPOS={x:DOORX,z:ZF};
   var sg=document.createElement('canvas'); sg.width=256; sg.height=64; var sx2=sg.getContext('2d'); sx2.fillStyle='#14202a'; sx2.fillRect(0,0,256,64); sx2.fillStyle='#ffd9a0'; sx2.font='700 34px Inter,IBM Plex Sans Arabic,sans-serif'; sx2.textAlign='center'; sx2.fillText('EXIT · خروج',128,45);
   var sm=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.38),new THREE.MeshBasicMaterial({map:canvasTex(sg)})); sm.position.set(0,4.45,.3); d.add(sm);
 })();
+function syncCinemaVideo(){
+  var u=mediaURL('cinemaVideo');
+  if(!u){
+    if(tvVideo){ tvVideo.pause(); tvVideo.removeAttribute('src'); tvVideo.load(); tvVideo=null; tvVideoSrc=''; }
+    if(urls.cinemaVideo){ URL.revokeObjectURL(urls.cinemaVideo.u); delete urls.cinemaVideo; }
+    return;
+  }
+  if(tvVideo&&tvVideoSrc===u) return;
+  if(tvVideo){ tvVideo.pause(); tvVideo.removeAttribute('src'); tvVideo.load(); }
+  tvVideo=document.createElement('video'); tvVideo.muted=true; tvVideo.loop=true; tvVideo.playsInline=true; tvVideo.preload='auto'; tvVideo.setAttribute('playsinline',''); tvVideo.setAttribute('autoplay','');
+  tvVideoSrc=u; tvVideo.src=u; tvVideo.addEventListener('loadeddata',function(){ if(tvVideo&&tvVideoSrc===u) tvVideo.play().catch(function(){}); });
+  tvVideo.load(); tvVideo.play().catch(function(){});
+}
 function tvDraw(now){
   var x=tvCv.getContext('2d'), w=tvCv.width, h=tvCv.height, list=frames.filter(function(f){ return f.canvas; });
+  if(tvVideo&&tvVideo.readyState>=2&&tvVideo.videoWidth){
+    var scale=Math.max(w/tvVideo.videoWidth,h/tvVideo.videoHeight), vw=tvVideo.videoWidth*scale, vh=tvVideo.videoHeight*scale;
+    x.fillStyle='#000'; x.fillRect(0,0,w,h); x.drawImage(tvVideo,(w-vw)/2,(h-vh)/2,vw,vh); tvTx.needsUpdate=true; return;
+  }
   if(!list.length) return;
   if(now-tvLast>4200){ tvLast=now; tvIdx=(tvIdx+1)%list.length; tvFade=0; }
   if(tvFade<1||tvLast===now){
@@ -1993,6 +2011,7 @@ function applyCfg(){
   var sm=document.createElement('small'); sm.textContent=C('from')+'  →  '+C('to'); $('brand').appendChild(sm);
   document.title=C('title'); tags.me.label.textContent=C(ROLE==='host'?'from':'to'); tags.npc.label.textContent=C(ROLE==='host'?'to':'from');
   drawScreen(); drawSecret(); drawCoupon(); drawObs(); if(typeof drawFeature==='function') drawFeature();
+  syncCinemaVideo();
   var jobs=frames.map(function(f,i){ return loadImg(cfg.photos[i]).then(function(im){ f.img=im; drawFrame(i); drawPlaque(i); setupVideo(i); }); });
   frames.forEach(function(f,i){ coverArt(i); });
   return Promise.all(jobs);
@@ -2061,6 +2080,15 @@ function audioRow(key,label,pickLabel,isFile){
   clr.addEventListener('click',function(){ delete dStore[key]; b.classList.remove('on'); st.textContent=''; });
   row.appendChild(b); row.appendChild(clr); row.appendChild(st); box.appendChild(row); return box;
 }
+function cinemaVideoRow(){
+  var box=el('div','fld'), row=el('div','row'), input=document.createElement('input'); input.type='file'; input.accept='video/*'; input.hidden=true;
+  var choose=el('button','mini'+(dStore.cinemaVideo?' on':''),dStore.cinemaVideo?t('videoSaved'):t('videoPick'));
+  var clear=el('button','mini',t('clear')), status=el('span','st',dStore.cinemaVideo?(dStore.cinemaVideo.name||t('videoSaved')):''); choose.type=clear.type='button';
+  choose.addEventListener('click',function(){ input.click(); });
+  input.addEventListener('change',function(){ var f=input.files&&input.files[0]; if(!f) return; if(f.size>40*1048576) toast(t('tooBig')); dStore.cinemaVideo=f; choose.textContent=t('videoSaved'); choose.classList.add('on'); status.textContent=f.name||t('videoSaved'); input.value=''; });
+  clear.addEventListener('click',function(){ delete dStore.cinemaVideo; input.value=''; choose.textContent=t('videoPick'); choose.classList.remove('on'); status.textContent=''; });
+  row.appendChild(input); row.appendChild(choose); row.appendChild(clear); row.appendChild(status); box.appendChild(row); return box;
+}
 function openEditor(){
   draft=clone(cfg); dStore=Object.assign({},store);
   $('edTitle').textContent=t('make'); buildEmojiBar(); $('edClose').textContent=t('close'); $('edNote').textContent=t('note'); $('edWalls').textContent=t('walls'); (function(a){ $('edCharsH').textContent=a?'الشخصيات':'Characters'; $('edCharsNote').textContent=a?'غيّر شكل آدم وليلى: الشعر والعيون والبشرة والملابس. التغييرات بتتحفظ على الجهاز ده.':'Change how both characters look: hair, eyes, skin and outfits. Saved on this device.'; $('edChars').textContent=a?'👗 خصّص الشخصيات':'👗 Customize characters'; })(LANG==='ar');
@@ -2079,6 +2107,7 @@ function openEditor(){
     inp.addEventListener('input',function(){ draft[f[0]]=inp.value; }); w.appendChild(inp); ex.appendChild(w);
   });
   var au=$('edAudio'); au.innerHTML=''; au.appendChild(audioRow('song',t('edSong'),t('songPick'),true)); au.appendChild(audioRow('audLetter',t('edLetterVoice'),'',false));
+  $('edCinemaH').textContent=t('cinemaVideo'); $('edCinemaNote').textContent=t('cinemaVideoNote'); var cv=$('edCinema'); cv.innerHTML=''; cv.appendChild(cinemaVideoRow());
   var ph=$('edPhotos'); ph.innerHTML='';
   for(var i=0;i<8;i++) (function(i){
     var card=el('div','ph-card'), th=el('div','ph'); paintThumb(th,i);
