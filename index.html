@@ -76,6 +76,9 @@ body.letterMode #mapBox,body.letterMode .brand,body.letterMode #hint,body.letter
 .tour-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
 #tourDistance{font-size:11.5px;color:#e4cbd1}
 #tourStop{padding:6px 12px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:600}
+#cinemaUploadPill{position:absolute;z-index:32;left:0;top:0;display:flex;align-items:center;gap:6px;pointer-events:auto;visibility:hidden}
+#cinemaUploadPill[hidden]{display:none}
+#cinemaUploadPill button{border:1px solid rgba(255,190,205,.42);border-radius:999px;padding:8px 13px;background:rgba(36,17,27,.94);backdrop-filter:blur(8px);color:#fff3f0;font-size:12px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.38);white-space:nowrap}
 #capBtn{background:var(--paper);color:var(--ink)}
 #capListen{background:var(--rose);color:#fff}
 #capOpen{background:#ffb3bf;color:#2b1f22;animation:beat 1.4s ease-in-out infinite}
@@ -406,7 +409,6 @@ body{background:#1a0d14}
       <button class="tool ring" id="tRing" hidden></button>
       <button class="tool" id="hudShot" hidden></button>
       <button class="tool" id="hudRec" hidden></button>
-      <button class="tool" id="again" hidden></button>
     </div>
     <div id="mapBox"><canvas id="map" width="168" height="248"></canvas><div id="mapTxt"></div></div>
     <div id="capPill" hidden><span id="capText"></span><button id="capListen" hidden></button><button id="capOpen" hidden></button><button id="capBtn"></button></div>
@@ -418,6 +420,7 @@ body{background:#1a0d14}
       <div class="tour-body"><div id="tourArrow" aria-hidden="true">↑</div><div class="tour-copy"><strong id="tourTitle"></strong><span id="tourMessage"></span></div></div>
       <div class="tour-foot"><span id="tourDistance"></span><button id="tourStop"></button></div>
     </section>
+    <div id="cinemaUploadPill" hidden><button id="cinemaUploadBtn" type="button"></button><button id="cinemaClearBtn" type="button" hidden></button><input id="cinemaUploadInput" type="file" accept="video/*" hidden></div>
   </div>
   <div id="stick" hidden><div id="knob"></div></div>
   <div id="toast"></div>
@@ -533,7 +536,7 @@ var NO_LINES={
 };
 var I18N={
  en:{lang:'العربية',enter:'Enter',customize:'Customize',from:'From',to:'To',prep:'Preparing the collection ',ready:'Ready ',close:'Close',reset:'Reset to sample',save:'Save and preview',
-  again:'Start over',look:'Look closer',listen:'🔊 Listen',sound:'Sound',lights:'Lights',guest:'✍ Guestbook',skip:'⏭ Skip to the end',shot:'📸 Save the moment',rec:'● Record',stop:'■ Stop',
+  look:'Look closer',listen:'🔊 Listen',sound:'Sound',lights:'Lights',guest:'✍ Guestbook',skip:'⏭ Skip to the end',shot:'📸 Save the moment',rec:'● Record',stop:'■ Stop',
   found:'Photos found',secret:'You found the secret room 🤍',need:'wait... you still have {n} photos to see 🥹',
   hintD:'Walk with W A S D, hold Shift to run. Drag to look around, scroll to zoom. Walk to the walls to see the photos.',hintT:'Drag the circle to walk, pull it to the edge to run. Drag the scene to look around. Go near a wall to see the photos.',
   back:'Back to the museum',yes:'Yes',no:'No',make:'Make it ours',note:'Your words, photos, videos and voice notes are saved on this device only.',
@@ -545,7 +548,7 @@ var I18N={
   edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',cinemaVideo:'Cinema room video',cinemaVideoNote:'Choose a video to play on the room TV. It loops silently and is saved on this device.',videoPick:'Add video',videoChange:'Change video',videoSaved:'Video selected',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
   date:'Date (optional)',capt:'Caption',songPick:'Choose song',tooBig:'File is large, it may be slow',micFail:'Microphone not available'},
  ar:{lang:'English',enter:'ادخل',customize:'خصّص',from:'من',to:'إلى',prep:'جاري تجهيز المتحف ',ready:'جاهز ',close:'إغلاق',reset:'رجّع للنموذج',save:'احفظ وشوف',
-  again:'ابدأ من الأول',look:'شوف أقرب',listen:'🔊 اسمع',sound:'الصوت',lights:'الإضاءة',guest:'✍ دفتر الزوار',skip:'⏭ روح للنهاية',shot:'📸 احفظ اللحظة',rec:'● سجّل',stop:'■ إيقاف',
+  look:'شوف أقرب',listen:'🔊 اسمع',sound:'الصوت',lights:'الإضاءة',guest:'✍ دفتر الزوار',skip:'⏭ روح للنهاية',shot:'📸 احفظ اللحظة',rec:'● سجّل',stop:'■ إيقاف',
   found:'الصور اللي شفتيها',secret:'لقيتي الأوضة السرية 🤍',need:'استني... لسه فاضل {n} صور متشفتيهاش 🥹',
   hintD:'امشي بأزرار W A S D، واضغط Shift عشان تجري. اسحب عشان تتفرج، والعجلة للتقريب. روح للحيطان عشان تشوف الصور.',hintT:'اسحب الدايرة عشان تمشي، واسحبها لآخرها عشان تجري. اسحب المشهد عشان تلف. قرّب من الحيط عشان تشوف الصور.',
   back:'ارجع للمتحف',yes:'أيوه',no:'لأ',make:'خلّيه بتاعنا',note:'كلامك وصورك وفيديوهاتك ورسائلك الصوتية بتتحفظ على الجهاز ده بس.',
@@ -828,6 +831,16 @@ function tvDraw(now){
     tvTx.needsUpdate=true;
   }
 }
+function updateCinemaUploadControl(){
+  var near=state==='explore'&&player.position.x>W/2+1.2&&player.position.z>-20.2&&player.position.z<-12.8&&Math.hypot(player.position.x-20.3,player.position.z+16.5)<6.2;
+  var pill=$('cinemaUploadPill'); pill.hidden=!near;
+  var btn=$('cinemaUploadBtn'), clear=$('cinemaClearBtn');
+  btn.textContent='🎬 '+(store.cinemaVideo?t('videoChange'):t('videoPick')); btn.title=btn.ariaLabel=store.cinemaVideo?t('videoChange'):t('videoPick');
+  clear.textContent=t('clear'); clear.hidden=!store.cinemaVideo;
+}
+$('cinemaUploadBtn').addEventListener('click',function(){ if(state==='explore') $('cinemaUploadInput').click(); });
+$('cinemaUploadInput').addEventListener('change',function(){ var f=this.files&&this.files[0]; if(!f) return; if(f.size>40*1048576) toast(t('tooBig')); store.cinemaVideo=f; idbPut('cinemaVideo',f); syncCinemaVideo(); this.value=''; updateCinemaUploadControl(); });
+$('cinemaClearBtn').addEventListener('click',function(){ delete store.cinemaVideo; idbDel('cinemaVideo'); syncCinemaVideo(); updateCinemaUploadControl(); });
 function exitAsk(){ if($('exitBox').hidden===false) return; $('exitBox').hidden=false; }
 $('exitBtn').addEventListener('click',exitAsk);
 $('exitStay').addEventListener('click',function(){ $('exitBox').hidden=true; });
@@ -1328,6 +1341,13 @@ function say(key,text,ms){
 var tmpV=new THREE.Vector3();
 function placeOverlays(){
   var w=stage.clientWidth,h=stage.clientHeight;
+  updateCinemaUploadControl();
+  var cinemaPill=$('cinemaUploadPill');
+  if(!cinemaPill.hidden){
+    tmpV.set(20.38,.42,-16.5).project(camera);
+    if(tmpV.z>1||tmpV.z<-1||Math.abs(tmpV.x)>1.2||Math.abs(tmpV.y)>1.2) cinemaPill.style.visibility='hidden';
+    else { cinemaPill.style.visibility='visible'; cinemaPill.style.transform='translate('+((tmpV.x*.5+.5)*w).toFixed(1)+'px,'+((-tmpV.y*.5+.5)*h).toFixed(1)+'px) translate(-50%,-50%)'; }
+  }
   Object.keys(tags).forEach(function(k){
     var tg=tags[k]; if(letterOn){ tg.el.style.visibility='hidden'; if(tg.bubble) tg.bubble.style.visibility='hidden'; return; }
     function put(el,yOff){
@@ -1752,9 +1772,8 @@ yes.addEventListener('click',function(){
 });
 $('askBack').addEventListener('click',function(){
   ask.classList.remove('in'); setTimeout(function(){ ask.hidden=true; },1200); state='done';
-  $('again').hidden=false; $('hudShot').hidden=false; $('hudRec').hidden=false;
+  $('hudShot').hidden=false; $('hudRec').hidden=false;
 });
-$('again').addEventListener('click',function(){ location.reload(); });
 window.addEventListener('resize',function(){ if(state==='proposal'&&tries===0) placeNoInSlot(); });
 
 /* ---------- Confetti ---------- */
@@ -2018,7 +2037,7 @@ function applyI18n(){
   document.documentElement.lang=LANG; document.documentElement.dir=LANG==='ar'?'rtl':'ltr';
   document.querySelectorAll('[data-i]').forEach(function(e){ e.textContent=t(e.getAttribute('data-i')); });
   $('langBtn').textContent=t('lang'); $('capBtn').textContent=t('look'); $('capOpen').textContent=t('open'); $('exitQ').textContent=t('exitQ'); $('exitStay').textContent=t('stay'); $('exitGo').textContent=t('leave'); $('capListen').textContent=t('listen');
-  $('hudShot').textContent=t('shot'); $('askShot').textContent=t('shot'); updateRecBtns(); $('again').textContent=t('again');
+  $('hudShot').textContent=t('shot'); $('askShot').textContent=t('shot'); updateRecBtns();
   $('yes').textContent=t('yes'); $('no').textContent=t('no'); $('askBack').textContent=t('back'); $('letGo').textContent=t('cont'); $('letVoice').textContent=t('letVoice');
   $('gbTitle').textContent=t('gTitle'); $('gbText').placeholder=t('gPlace'); $('gbAdd').textContent=t('gAdd'); $('gbClose').textContent=t('close');
   hint.textContent=isTouch?t('hintT'):t('hintD');
