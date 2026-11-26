@@ -1016,8 +1016,8 @@ function makeAvatar(o){
   function mat(c){ return new THREE.MeshStandardMaterial({color:c,roughness:.62,emissive:c,emissiveIntensity:.13}); }
   var skin=mat(o.skin),top=mat(o.top),trim=mat(o.trim),bottom=mat(o.bottom),legM=mat(o.legs||o.bottom),hair=new THREE.MeshPhysicalMaterial({color:o.hair,roughness:.28,metalness:.18,clearcoat:1,clearcoatRoughness:.22,emissive:o.hair,emissiveIntensity:.2,side:THREE.DoubleSide}),shoe=mat(o.shoe), irisM=new THREE.MeshBasicMaterial({color:o.eye}), topD=mat(o.top), tieM=mat(o.him?(o.accent!=null?o.accent:0x7a1830):0), beltM=mat(o.belt||0xd9b25e);
   topD.color.multiplyScalar(.72); topD.emissive.copy(topD.color);
-  var white=new THREE.MeshBasicMaterial({color:0xffffff}),dark=new THREE.MeshBasicMaterial({color:0x1d1518}),lipM=new THREE.MeshBasicMaterial({color:Wm?0xb4525e:0x8a4040});
-  var blushM=new THREE.MeshBasicMaterial({color:0xff6f8a,transparent:true,opacity:Wm?.5:.55,depthWrite:false});
+  var white=new THREE.MeshBasicMaterial({color:0xffffff}),dark=new THREE.MeshBasicMaterial({color:0x1d1518}),lipM=new THREE.MeshBasicMaterial({color:Wm?0xd9697c:0x8a4040});
+  var blushM=new THREE.MeshBasicMaterial({color:0xff6f8a,transparent:true,opacity:Wm?.3:.4,depthWrite:false});
   var hy=Wm?.593:.575, hip=new THREE.Group(); hip.position.set(0,hy,0); g.add(hip);
   var up=new THREE.Group(); up.position.set(0,-.88,0); hip.add(up);
   function leg(x){
@@ -1070,19 +1070,19 @@ function makeAvatar(o){
   var HY=1.62, hd=new THREE.Group(); hd.position.set(0,HY+.043,0.012); hd.scale.setScalar(Wm?1.02:1.07); up.add(hd);
   function hp(geo,m,x,y,z,sx,sy,sz,ol){ return part(hd,geo,m,x,y-HY,z,sx,sy,sz,ol); }
   hp(SPH(.27),skin,0,1.795,0,Wm?.93:.97,Wm?1:1.02,Wm?.98:1,1.05); hp(SPH(.045),skin,Wm?-.24:-.262,1.78,0,.6,1,1,1.12); hp(SPH(.045),skin,Wm?.24:.262,1.78,0,.6,1,1,1.12);
+  var glowIris=new THREE.MeshBasicMaterial({color:new THREE.Color(o.eye).lerp(new THREE.Color(0xffffff),.42)}), browM=new THREE.MeshBasicMaterial({color:new THREE.Color(o.hair).multiplyScalar(.5)});
   var FE=[],FB=[],FLD=[],FACE={eyes:FE,brows:FB,lids:FLD,blushM:blushM,bBase:blushM.opacity};
   function fe(m){ FE.push({m:m,sx:m.scale.x,sy:m.scale.y,sz:m.scale.z}); return m; }
   [-1,1].forEach(function(sx){
-    var x=sx*.103, es=Wm?.8:1;
-    fe(hp(SPH(.07*es),white,x,1.8,.243,1.2,1.55,.45,0)); fe(hp(SPH(.054*es),irisM,x,1.79,.262,1.2,1.5,.5,0)); fe(hp(SPH(.03*es),dark,x,1.787,.274,1.05,1.3,.5,0)); fe(hp(SPH(.024*es),white,x+.02,1.822,.292,1,1,1,0)); fe(hp(SPH(.012*es),white,x-.018,1.766,.292,1,1,1,0));
+    var x=sx*.103, es=Wm?.86:1;
+    fe(hp(SPH(.07*es),white,x,1.8,.243,1.2,1.38,.45,0)); fe(hp(SPH(.062*es),irisM,x,1.795,.262,1.2,1.38,.5,0)); fe(hp(SPH(.034*es),dark,x,1.792,.274,1.05,1.2,.5,0)); if(Wm){ fe(hp(SPH(.034*es),glowIris,x,1.775,.281,1.45,.55,.4,0)); } fe(hp(SPH((Wm?.032:.027)*es),white,x+.02,1.825,.292,1,1,1,0)); fe(hp(SPH(.013*es),white,x-.018,1.774,.292,1,1,1,0));
     FLD.push({m:hp(new THREE.TorusGeometry(.044,.0075,6,14,Math.PI),dark,x,1.785,.266,1,1,1,0),k:'arc'}); FLD.push({m:hp(new THREE.BoxGeometry(.092,.011,.014),dark,x,1.8,.266,1,1,1,0),k:'line'}); FLD[FLD.length-1].m.visible=FLD[FLD.length-2].m.visible=false;
-    var brow=hp(new THREE.BoxGeometry(.085,Wm?.011:.017,.012),hair,x,1.925,.252,1,1,1,0);
-    if(Wm){ var ls=hp(new THREE.BoxGeometry(.108,.015,.016),dark,x,1.872,.272,1,1,1,0); ls.rotation.z=sx*.2; FE.push({m:ls,sx:1,sy:1,sz:1}); var ls2=hp(new THREE.BoxGeometry(.042,.012,.016),dark,x+sx*.058,1.846,.268,1,1,1,0); ls2.rotation.z=-sx*.55; FE.push({m:ls2,sx:1,sy:1,sz:1}); }
+    var brow=hp(new THREE.BoxGeometry(Wm?.064:.085,Wm?.0075:.014,.012),Wm?browM:hair,x+(Wm?sx*.004:0),Wm?1.937:1.925,.252,1,1,1,0);
+    if(Wm){ var ls=hp(new THREE.BoxGeometry(.108,.018,.016),dark,x,1.877,.272,1,1,1,0); ls.rotation.z=-sx*.1; FE.push({m:ls,sx:1,sy:1,sz:1}); var ls2=hp(new THREE.BoxGeometry(.042,.012,.016),dark,x+sx*.058,1.846,.268,1,1,1,0); ls2.rotation.z=sx*.4; FE.push({m:ls2,sx:1,sy:1,sz:1}); }
     brow.rotation.z=-sx*.12; FB.push({m:brow,y:brow.position.y,sx:sx});
-    hp(SPH(.075),skin,sx*.138,1.722,.168,1,.88,.9,0);
-    var bl=hp(new THREE.CircleGeometry(.056,16),blushM,sx*.147,1.725,.237,1,1,1,0); bl.rotation.y=sx*.5;
+    var bl=hp(new THREE.CircleGeometry(Wm?.05:.046,20),blushM,sx*.162,1.682,.2,1.15,.8,1,0); bl.rotation.y=sx*.62;
   });
-  hp(SPH(.022),skin,0,1.775,.275,1,.9,.9,0);
+  hp(SPH(Wm?.014:.018),skin,0,1.768,.272,1,.9,.9,0);
   var mouth=hp(new THREE.TorusGeometry(.04,.009,6,14,Math.PI),lipM,0,1.735,.257,1,1,1,0); mouth.rotation.z=Math.PI; var lipX=null; mouth.scale.set(Wm?.95:1.12,Wm?.9:1.1,1); if(Wm){ lipX=hp(SPH(.03),lipM,0,1.727,.262,1.9,.5,.45,0); }
   FACE.mouth=mouth; FACE.lipX=lipX; FACE.mb={x:mouth.scale.x,y:mouth.scale.y,z:mouth.scale.z,py:mouth.position.y};
   FACE.mO=hp(SPH(.03),dark,0,1.715,.263,1.5,.9,.4,0); FACE.mO.visible=false; FACE.mP=hp(SPH(.022),lipM,0,1.73,.266,1.1,.95,.7,0); FACE.mP.visible=false;
@@ -1712,6 +1712,7 @@ function frame(now){
     if(pz<-33.4&&px0>-W/2&&ROLE!=='host') startCine();
     var best=-1,bd=5.4;
     frames.forEach(function(f,i){ var d=Math.hypot(f.x-px0,f.z-pz); if(d<5.4&&!found[i]){ found[i]=1; chime([84,88],.12,.12); } if(d<bd){ bd=d; best=i; } });
+    if(pz>=-28.5&&pz<=-22.5&&Math.abs(px0)>13.7) best=-1; /* inside the photo booth / drawing studio: no painting caption */
     if(state==='explore') setNear(best);
     var nearExit=Math.hypot(px0-EXITPOS.x,pz-EXITPOS.z)<3.4; $('exitPill').hidden=!nearExit;
   } else $('exitPill').hidden=true;
@@ -2191,7 +2192,7 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
   document.head.appendChild(st); })();
 var REACTS=['wave','heart','kiss','clap','cheer','laugh','cry','dance','jump','shy','wow','hand','sit'];
 var RLAB={en:{wave:'Wave',heart:'Heart hands',kiss:'Blow a kiss',clap:'Clap',cheer:'Cheer',laugh:'Laugh',cry:'Cry',dance:'Dance',jump:'Jump',shy:'Shy',wow:'Wow',hand:'Hold hands',sit:'Sit',main:'React'},ar:{wave:'لوّح',heart:'قلب بإيديكي',kiss:'ابعتي بوسة',clap:'صفّقي',cheer:'هلّلي',laugh:'اضحكي',cry:'عيّطي',dance:'ارقصي',jump:'نطّي',shy:'اتكسفي',wow:'يا سلام',hand:'امسكي إيده',sit:'اقعدي',main:'تفاعل'}};
-var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,wow:2.4,hand:4};
+var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,wow:2.4,hand:5};
 var REMO={wave:'\uD83D\uDC4B',heart:'\uD83E\uDEF6',kiss:'\uD83D\uDE18',clap:'\uD83D\uDC4F',cheer:'\uD83D\uDE4C',laugh:'\uD83D\uDE02',cry:'\uD83D\uDE2D',dance:'\uD83D\uDC83',jump:'\uD83E\uDD38',shy:'\uD83D\uDE48',wow:'\uD83D\uDE2E',hand:'\uD83D\uDC6B',sit:'\uD83E\uDE91'};
 var myR=null, npcR=null, tray=document.createElement('div'); tray.className='tray'; tray.hidden=true; emEl.appendChild(tray);
 var emMain=document.createElement('button'); emMain.className='em-main'; emMain.setAttribute('aria-expanded','false'); emEl.appendChild(emMain);
@@ -2343,16 +2344,20 @@ function applyReact(av,r,dt,isMe){
     /* reach out and take your partner's hand: turn to them, pick the nearest arm/hand pair, and follow their hand */
     var ot=(av===player)?npc:player, ou=ot.userData, ddx=ot.position.x-px, ddz=ot.position.z-pz, dist=Math.hypot(ddx,ddz);
     if(isMe){
-      if(dist<6){ /* step up beside them, same direction, so the hands are naturally within reach */
+      /* only the one who pressed walks over, slowly, and stops about an arm's length away (never on top of the partner) */
+      var yieldH=!!(npcR&&npcR.n==='hand'&&ROLE==='guest');
+      if(dist<7&&!yieldH){
         var ux=CO(ot.rotation.y), uz=-S(ot.rotation.y); if(r.sg==null) r.sg=(-ddx*ux-ddz*uz)>=0?1:-1;
-        var gx=ot.position.x+ux*r.sg*.52, gz=ot.position.z+uz*r.sg*.52, kk=Math.min(1,dt*4)*w;
-        av.position.x+=(gx-av.position.x)*kk; av.position.z+=(gz-av.position.z)*kk;
-        av.rotation.y+=Math.atan2(S(ot.rotation.y-av.rotation.y),CO(ot.rotation.y-av.rotation.y))*Math.min(1,dt*6)*w; }
-      else if(dist>.3){ var wa=Math.atan2(ddx,ddz); av.rotation.y+=Math.atan2(S(wa-av.rotation.y),CO(wa-av.rotation.y))*Math.min(1,dt*7)*w; } }
+        var gx=ot.position.x+ux*r.sg*.95, gz=ot.position.z+uz*r.sg*.95, mdx=gx-av.position.x, mdz=gz-av.position.z, md=Math.hypot(mdx,mdz);
+        if(dist>1.15&&md>.02){ var stp=Math.min(md,1.2*Math.min(dt,.05)*w); av.position.x+=mdx/md*stp; av.position.z+=mdz/md*stp; }
+        av.rotation.y+=Math.atan2(S(ot.rotation.y-av.rotation.y),CO(ot.rotation.y-av.rotation.y))*Math.min(1,dt*3)*w; }
+      else if(dist>.3&&!yieldH){ var wa=Math.atan2(ddx,ddz); av.rotation.y+=Math.atan2(S(wa-av.rotation.y),CO(wa-av.rotation.y))*Math.min(1,dt*4)*w; } }
+    /* arms only reach out once the two are close, so nothing stretches or snaps while one is still walking over */
+    var rch=clampN((2.3-dist)/.8,0,1); w*=rch;
     H(.06,0,.12); B(.03,0,0); prep(); ot.updateMatrixWorld(true);
     function oh(sd){ return (sd>0?ou.handR:ou.handL).localToWorld(new THREE.Vector3(0,-.03,0)); }
-    if(r.hs==null){ var bst=1e9; [1,-1].forEach(function(sd){ var ph=oh(sd); [1,-1].forEach(function(md){ var dd=ph.distanceTo((md>0?u.armR:u.armL).localToWorld(new THREE.Vector3())); if(dd<bst){ bst=dd; r.hs=md; r.ho=sd; } }); }); }
-    IK(r.hs,IK_PC,oh(r.ho),null,0,r.hs>0?[[-.9,-.25,-.3,0],[-1.3,-.5,-.8,0],[-.4,.4,-.2,0]]:[[-.9,.25,-.3,0],[-1.3,.5,-.8,0],[-.4,-.4,-.2,0]]);
+    if(r.hs==null&&dist<2.2){ var bst=1e9; [1,-1].forEach(function(sd){ var ph=oh(sd); [1,-1].forEach(function(md2){ var dd=ph.distanceTo((md2>0?u.armR:u.armL).localToWorld(new THREE.Vector3())); if(dd<bst){ bst=dd; r.hs=md2; r.ho=sd; } }); }); }
+    if(r.hs!=null&&w>.01) IK(r.hs,IK_PC,oh(r.ho),null,0,r.hs>0?[[-.9,-.25,-.3,0],[-1.3,-.5,-.8,0],[-.4,.4,-.2,0]]:[[-.9,.25,-.3,0],[-1.3,.5,-.8,0],[-.4,-.4,-.2,0]]);
     if(dist<2.4&&t>(r.nx||0)){ r.nx=t+.5; heartsAt((px+ot.position.x)/2,1.5,(pz+ot.position.z)/2,1,.3); }
     F({mouth:'smile',blush:.7,brow:.2}); }
   else if(n==='paint'){ var pnu=paintPen.u, pnv=paintPen.v, psw=S(t*16)*.07;
@@ -2486,6 +2491,50 @@ function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,no
   emotes=emotes.filter(function(e){ if(nowMs-e.t>2300){ e.el.remove(); return false; } var av=tags[e.key].av, hs=av.userData.sc/.82; tmpV.set(av.position.x,av.position.y+2.75*hs,av.position.z).project(camera);
     if(tmpV.z>1||Math.abs(tmpV.x)>1.2||letterOn){ e.el.style.visibility='hidden'; } else { e.el.style.visibility='visible'; e.el.style.transform='translate('+((tmpV.x*.5+.5)*w).toFixed(1)+'px,'+((-tmpV.y*.5+.5)*h).toFixed(1)+'px) translate(-50%,-100%)'; } return true; });
 }
+
+/* ===== ROOF LIGHTS, PAINTING SPOTLIGHTS, ROOM NAMES ===== */
+(function(){
+  var ADD=function(m){ m.transparent=true; m.blending=THREE.AdditiveBlending; m.depthWrite=false; return m; };
+  var halo=gTex(128,128,function(x,w,h){ var g=x.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2); g.addColorStop(0,'rgba(255,228,190,1)'); g.addColorStop(.35,'rgba(255,210,170,.45)'); g.addColorStop(1,'rgba(255,200,160,0)'); x.fillStyle=g; x.fillRect(0,0,w,h); });
+  var headM=new THREE.MeshStandardMaterial({color:0x151215,roughness:.4,metalness:.5});
+  var warm=new THREE.MeshBasicMaterial({color:0xfff0d6});
+  function mesh(g,m,x,y,z){ var o=new THREE.Mesh(g,m); o.position.set(x,y,z); scene.add(o); return o; }
+  /* ---- roof: glowing cove strips along both sides + recessed round lights down the middle ---- */
+  [-1,1].forEach(function(sd){
+    mesh(new THREE.BoxGeometry(.18,.04,L-2),warm,sd*(W/2-.9),H-.03,ZC);
+    mesh(new THREE.PlaneGeometry(1.3,L-2),ADD(new THREE.MeshBasicMaterial({color:0xff9f78,opacity:.16})),sd*(W/2-.9),H-.02,ZC).rotation.x=Math.PI/2;
+  });
+  for(var z=ZF-2; z>ZB+1; z-=4){
+    [-5,0,5].forEach(function(x){
+      mesh(new THREE.CylinderGeometry(.34,.34,.06,24),headM,x,H-.03,z);
+      mesh(new THREE.CircleGeometry(.27,24),warm,x,H-.07,z).rotation.x=Math.PI/2;
+      var hl=mesh(new THREE.PlaneGeometry(2.6,2.6),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.5})),x,H-.09,z); hl.rotation.x=Math.PI/2;
+      var fp=mesh(new THREE.PlaneGeometry(3.6,3.6),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.2})),x,.012,z); fp.rotation.x=-Math.PI/2;
+    });
+  }
+  hallLights.forEach(function(l){ l.intensity=.34; });
+  /* ---- one spotlight on the roof for every painting ---- */
+  SLOTS.forEach(function(sl){
+    var side=sl.x<0?-1:1, fx=side*(W/2-2.3), fy=H-.14;
+    var tx=sl.x, ty=FY+.7, tz=sl.z;
+    var rail=mesh(new THREE.BoxGeometry(.5,.05,.12),headM,fx,H-.04,sl.z);
+    var head=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,.3,16).rotateX(Math.PI/2),headM); head.position.set(fx,fy,sl.z); head.lookAt(tx,ty,tz); scene.add(head);
+    var lens=new THREE.Mesh(new THREE.CircleGeometry(.1,16),warm); lens.position.copy(head.position); lens.lookAt(tx,ty,tz); lens.translateZ(.155); scene.add(lens);
+    var len=Math.hypot(tx-fx,ty-fy,tz-sl.z);
+    var cone=new THREE.Mesh(new THREE.ConeGeometry(1.15,len,24,1,true).translate(0,-len/2,0).rotateX(-Math.PI/2),ADD(new THREE.MeshBasicMaterial({color:0xffe2b8,opacity:.07,side:THREE.DoubleSide})));
+    cone.position.set(fx,fy,sl.z); cone.lookAt(tx,ty,tz); scene.add(cone);
+    var wash=new THREE.Mesh(new THREE.PlaneGeometry(3.4,4.4),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.55})));
+    wash.position.set(side*(W/2-.025),FY+.35,sl.z); wash.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(wash);
+    var pool=mesh(new THREE.PlaneGeometry(3.2,2.2),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.35})),side*(W/2-1.4),.014,sl.z); pool.rotation.x=-Math.PI/2;
+  });
+  /* ---- room name above the two hall doors that had no sign ---- */
+  function nameSign(side,en,ar,col){
+    var tx=gTex(512,128,function(x,w,h){ x.fillStyle='#1b1519'; x.fillRect(0,0,w,h); x.strokeStyle=col; x.lineWidth=5; x.strokeRect(8,8,w-16,h-16); x.fillStyle='#fff3f0'; x.textAlign='center'; x.font='600 40px Inter,"IBM Plex Sans Arabic",sans-serif'; x.fillText(en+'  ·  '+ar,w/2,78,w-40); });
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(2.8,.7),new THREE.MeshBasicMaterial({map:tx})); m.position.set(side*(W/2-.05),4.25,DOORZ); m.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(m);
+  }
+  nameSign(-1,'SECRET ROOM','الأوضة السرية','#ff8fa8');
+  nameSign(1,'CINEMA ROOM','أوضة العرض','#8a90ff');
+})();
 
 /* ===== NEW ROOMS: Photo Booth (west) and Drawing Studio (east); both work live over the same invite link ===== */
 var RZ0=-28.5, RZ1=-22.5, RCZ=-25.5, bFilter=0, bBusy=false, album=[], albumDirty=true, curZone=0, zoneLang='', seenZ={}, soloAt=false, albumTex=null, drawWallTex=null, drawPlane=null, albumPlane=null, phoSel=0;
