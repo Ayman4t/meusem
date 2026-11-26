@@ -848,6 +848,26 @@ function radialTex(inner,outer){ var c=document.createElement('canvas'); c.width
 var washTex=radialTex('rgba(255,236,205,.22)','rgba(255,236,205,0)'), poolTex=radialTex('rgba(255,226,180,.4)','rgba(255,226,180,0)');
 function additive(tx){ return new THREE.MeshBasicMaterial({map:tx,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}); }
 
+/* ---------- Even painting light (applies to EVERY painting) ----------
+   Paintings use unlit materials, so light is a soft additive sheen laid over the whole
+   frame: almost even from top to bottom (a touch brighter at the top, never dark below). */
+var sheenTex=(function(){
+  var c=document.createElement('canvas'); c.width=64; c.height=128; var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,0,128);
+  g.addColorStop(0,'rgba(255,238,210,.095)'); g.addColorStop(.5,'rgba(255,238,210,.085)'); g.addColorStop(1,'rgba(255,238,210,.078)');
+  x.fillStyle=g; x.fillRect(0,0,64,128);
+  var r=x.createRadialGradient(32,64,4,32,64,90); r.addColorStop(0,'rgba(255,246,228,.035)'); r.addColorStop(1,'rgba(255,246,228,0)');
+  x.fillStyle=r; x.fillRect(0,0,64,128);
+  return canvasTex(c);
+})();
+function sheenMat(op){ var m=additive(sheenTex); m.opacity=op; m.polygonOffset=true; m.polygonOffsetFactor=-2; m.polygonOffsetUnits=-2; return m; }
+function sheenPlane(w,h,z,op){ var m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),sheenMat(op)); m.position.z=z; m.renderOrder=2; return m; }
+
+/* How a gift cover opens, for every painting: 'doors' = the ribbon parts and the two halves swing open
+   like little doors; 'float' = the original (cover floats up and fades). */
+var OPEN_STYLE='doors';
+function halfGeo(w,h,right){ var g=new THREE.PlaneGeometry(w/2,h), uv=g.attributes.uv; for(var i=0;i<uv.count;i++) uv.setX(i,(uv.getX(i)+(right?1:0))/2); return g; }
+
 /* ---------- Frames ---------- */
 var SLOTS=[];
 [-3,-12,-21,-30].forEach(function(z){ SLOTS.push({x:-W/2+.06,z:z,ry:Math.PI/2}); SLOTS.push({x:W/2-.06,z:z,ry:-Math.PI/2}); });
@@ -871,13 +891,28 @@ function coverArt(i){
   f.ctex.needsUpdate=true;
 }
 function openCover(i){
-  var f=frames[i]; if(!f||f.open) return; f.open=true; f.opening=true; f.openT=0; chime([79,84,88],.1,.14); burst(24); fxHearts(i);
+  var f=frames[i]; if(!f||f.open) return; f.open=true; f.opening=true; f.openT=0; f.style=OPEN_STYLE;
+  if(f.style==='doors'){ f.cover.visible=false; f.doors.visible=true; f.doorL.rotation.y=0; f.doorR.rotation.y=0; f.doorMat.opacity=1; } chime([79,84,88],.1,.14); burst(24); fxHearts(i);
   $('capOpen').hidden=true; $('capBtn').hidden=false;
   if(f.video) f.video.play().catch(function(){});
   if(!guided[i]&&store['aud'+i]){ guided[i]=true; playVoice('aud'+i); }
   if(i===4&&store.song) startSong();
 }
 
+function updateCoverOpen(f,dt){
+  var doors=f.style==='doors';
+  f.openT=Math.min(1,f.openT+dt/(doors?1.15:.9));
+  var k=f.openT, e=ease(k);
+  if(doors){
+    var sw=ease(Math.min(1,k/.78)), fade=ease(Math.max(0,(k-.55)/.45));
+    f.doorL.rotation.y=-sw*1.75; f.doorR.rotation.y=sw*1.75; f.doorMat.opacity=1-fade;
+  } else {
+    f.cover.position.y=e*.7; f.cover.scale.setScalar(1+e*.12); f.cover.material.opacity=1-e;
+  }
+  f.sheenC.material.opacity=1-ease(Math.min(1,k/.25));          /* cover light hands over to the photo light */
+  f.sheenP.material.opacity=.8+.2*Math.sin(Math.PI*k);          /* a soft glow as the picture is revealed */
+  if(k>=1){ f.opening=false; f.cover.visible=false; f.doors.visible=false; f.sheenC.visible=false; f.sheenP.material.opacity=.8; }
+}
 function heartPath(x,cx,cy,s){ x.beginPath(); x.moveTo(cx,cy+s*.35); x.bezierCurveTo(cx-s*1.1,cy-s*.35,cx-s*.45,cy-s*1.0,cx,cy-s*.4); x.bezierCurveTo(cx+s*.45,cy-s*1.0,cx+s*1.1,cy-s*.35,cx,cy+s*.35); x.closePath(); }
 function wrapText(x,text,cx,y,maxW,lh){
   var words=String(text).split(/\s+/), line='', lines=[];
@@ -922,7 +957,16 @@ function drawPlaque(i){
     var pool=new THREE.Mesh(new THREE.PlaneGeometry(6,7.5),additive(poolTex)); pool.visible=false;
     var cc2=document.createElement('canvas'); cc2.width=500; cc2.height=Math.round(500*(FH+.32)/(FW+.32)); var ctx2=canvasTex(cc2);
     var cover=new THREE.Mesh(new THREE.PlaneGeometry(FW+.2,FH+.2),new THREE.MeshBasicMaterial({map:ctx2,transparent:true})); cover.position.z=.06; g.add(cover);
+    var cw=FW+.2, ch=FH+.2;
+    var sheenP=sheenPlane(cw,ch,.054,.8); g.add(sheenP);
+    var sheenC=sheenPlane(cw,ch,.064,1); g.add(sheenC);
+    var doors=new THREE.Group(); doors.position.z=.06; doors.visible=false; g.add(doors);
+    var doorMat=new THREE.MeshBasicMaterial({map:ctx2,transparent:true,side:THREE.DoubleSide});
+    var doorL=new THREE.Group(); doorL.position.x=-cw/2; var dml=new THREE.Mesh(halfGeo(cw,ch,false),doorMat); dml.position.x=cw/4; doorL.add(dml);
+    var doorR=new THREE.Group(); doorR.position.x=cw/2; var dmr=new THREE.Mesh(halfGeo(cw,ch,true),doorMat); dmr.position.x=-cw/4; doorR.add(dmr);
+    doors.add(doorL); doors.add(doorR);
     frames.push({ccanvas:cc2,ctex:ctx2,cover:cover,open:false,opening:false,openT:0,canvas:c,ctx:c.getContext('2d'),tex:tx,img:null,x:s.x,z:s.z,group:g,photo:photo,pcanvas:pc,pctx:pc.getContext('2d'),ptex:ptx,video:null,vtex:null});
+    var fo=frames[frames.length-1]; fo.doors=doors; fo.doorL=doorL; fo.doorR=doorR; fo.doorMat=doorMat; fo.sheenP=sheenP; fo.sheenC=sheenC;
     drawFrame(i); drawPlaque(i); coverArt(i);
   });
 })();
@@ -1720,7 +1764,7 @@ function frame(now){
 
   /* video textures update only while playing */
   frames.forEach(function(f){ if(f.video&&!f.video.paused) f.vtex.needsUpdate=true;
-    if(f.opening){ f.openT=Math.min(1,f.openT+dt/.9); var e=ease(f.openT); f.cover.position.y=e*.7; f.cover.scale.setScalar(1+e*.12); f.cover.material.opacity=1-e; if(f.openT>=1){ f.opening=false; f.cover.visible=false; } } });
+    if(f.opening) updateCoverOpen(f,dt); });
   couponMesh.position.y=1.45+Math.sin(now*.0015)*.05; couponMesh.rotation.y=Math.PI/2+Math.sin(now*.0008)*.25;
   twinkles.forEach(function(s){ s.material.color.setRGB(1,.85+Math.sin(now*.003+s.userData.ph)*.1,.55+Math.sin(now*.004+s.userData.ph)*.2); });
   if(state==='explore'||state==='cinematic'){
@@ -2124,6 +2168,7 @@ function drawFeature(){
     var m1=new THREE.Mesh(new THREE.PlaneGeometry(w+.14,h+.14),mat); m1.position.z=.035; g.add(m1);
     var ph=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:frames[k%frames.length].tex})); ph.position.z=.04; g.add(ph);
     var wash=new THREE.Mesh(new THREE.PlaneGeometry(2.8,3.8),additive(washTex)); wash.position.z=.02; wash.renderOrder=1; g.add(wash);
+    g.add(sheenPlane(w+.14,h+.14,.045,1));
   }
   /* free-standing partition walls */
   var k=0;
@@ -2516,15 +2561,15 @@ function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,no
   /* ---- one spotlight on the roof for every painting ---- */
   SLOTS.forEach(function(sl){
     var side=sl.x<0?-1:1, fx=side*(W/2-2.3), fy=H-.14;
-    var tx=sl.x, ty=FY+.7, tz=sl.z;
+    var tx=sl.x, ty=FY-.05, tz=sl.z;
     var rail=mesh(new THREE.BoxGeometry(.5,.05,.12),headM,fx,H-.04,sl.z);
     var head=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,.3,16).rotateX(Math.PI/2),headM); head.position.set(fx,fy,sl.z); head.lookAt(tx,ty,tz); scene.add(head);
     var lens=new THREE.Mesh(new THREE.CircleGeometry(.1,16),warm); lens.position.copy(head.position); lens.lookAt(tx,ty,tz); lens.translateZ(.155); scene.add(lens);
     var len=Math.hypot(tx-fx,ty-fy,tz-sl.z);
-    var cone=new THREE.Mesh(new THREE.ConeGeometry(1.15,len,24,1,true).translate(0,-len/2,0).rotateX(-Math.PI/2),ADD(new THREE.MeshBasicMaterial({color:0xffe2b8,opacity:.07,side:THREE.DoubleSide})));
+    var len2=len*1.2, cone=new THREE.Mesh(new THREE.ConeGeometry(1.5,len2,24,1,true).translate(0,-len2/2,0).rotateX(-Math.PI/2),ADD(new THREE.MeshBasicMaterial({color:0xffe2b8,opacity:.07,side:THREE.DoubleSide})));
     cone.position.set(fx,fy,sl.z); cone.lookAt(tx,ty,tz); scene.add(cone);
     var wash=new THREE.Mesh(new THREE.PlaneGeometry(3.4,4.4),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.55})));
-    wash.position.set(side*(W/2-.025),FY+.35,sl.z); wash.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(wash);
+    wash.position.set(side*(W/2-.025),FY,sl.z); wash.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(wash);
     var pool=mesh(new THREE.PlaneGeometry(3.2,2.2),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.35})),side*(W/2-1.4),.014,sl.z); pool.rotation.x=-Math.PI/2;
   });
   /* ---- room name above the two hall doors that had no sign ---- */
