@@ -420,7 +420,7 @@ body{background:#1a0d14}
       <div class="tour-body"><div id="tourArrow" aria-hidden="true">↑</div><div class="tour-copy"><strong id="tourTitle"></strong><span id="tourMessage"></span></div></div>
       <div class="tour-foot"><span id="tourDistance"></span><button id="tourStop"></button></div>
     </section>
-    <div id="cinemaUploadPill" hidden><button id="cinemaUploadBtn" type="button"></button><button id="cinemaClearBtn" type="button" hidden></button><input id="cinemaUploadInput" type="file" accept="video/*" hidden></div>
+    <div id="cinemaUploadPill" hidden><button id="cinemaUploadBtn" type="button"></button><input id="cinemaUploadInput" type="file" accept="video/*" hidden></div>
   </div>
   <div id="stick" hidden><div id="knob"></div></div>
   <div id="toast"></div>
@@ -545,7 +545,7 @@ var I18N={
   copy:'Copy link',copied:'Link copied',long:'Copied. The link is long because of the photos.',needHost:'Copied, but this page is not hosted online, so the link will not open for others. Host it online first.',
   dl:'Download as one file',building:'Building...',saved:'Saved',norec:'Recording is not supported in this browser',
   lightNames:['Evening','Day','Candle'],edLang:'Language',edLetter:'His letter (before the question)',edSecret:'Secret room message',edCoupon:'Coupon on the pedestal',edClosing:'Closing message (shown under the question)',open:'🎀 Open',exitQ:'Leave the museum?',stay:'Stay',leave:'Leave',edNeed:'Require all photos before the finale',
-  edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',cinemaVideo:'Cinema room video',cinemaVideoNote:'Choose a video to play on the room TV. It loops silently and is saved on this device.',videoPick:'Add video',videoChange:'Change video',videoNearAdd:'🎬 Add',videoNearChange:'🎬 Change',videoSaved:'Video selected',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
+  edSong:'Your favourite song (plays near the 5th frame)',edLetterVoice:'Voice for the letter',cinemaVideo:'Cinema room video',cinemaVideoNote:'Choose a video to play on the room TV. It loops silently and is saved on this device.',videoPick:'Add video',videoChange:'Change video',videoNearAdd:'🎬 Add',videoSaved:'Video selected',photoBtn:'Photo / video',clear:'Clear',recV:'🎙 Voice',stopV:'■ Stop',voiceOn:'voice saved',songOn:'song saved',
   date:'Date (optional)',capt:'Caption',songPick:'Choose song',tooBig:'File is large, it may be slow',micFail:'Microphone not available'},
  ar:{lang:'English',enter:'ادخل',customize:'خصّص',from:'من',to:'إلى',prep:'جاري تجهيز المتحف ',ready:'جاهز ',close:'إغلاق',reset:'رجّع للنموذج',save:'احفظ وشوف',
   look:'شوف أقرب',listen:'🔊 اسمع',sound:'الصوت',lights:'الإضاءة',guest:'✍ دفتر الزوار',skip:'⏭ روح للنهاية',shot:'📸 احفظ اللحظة',rec:'● سجّل',stop:'■ إيقاف',
@@ -557,7 +557,7 @@ var I18N={
   copy:'انسخ اللينك',copied:'اتنسخ اللينك',long:'اتنسخ. اللينك طويل بسبب الصور.',needHost:'اتنسخ، بس الصفحة مش منشورة أونلاين فاللينك مش هيفتح عند حد. انشرها أونلاين الأول.',
   dl:'نزّل كملف واحد',building:'بجهّز...',saved:'اتحفظ',norec:'التسجيل مش مدعوم في المتصفح ده',
   lightNames:['مساء','نهار','شموع'],edLang:'اللغة',edLetter:'جواب منه (قبل السؤال)',edSecret:'رسالة الأوضة السرية',edCoupon:'القسيمة على القاعدة',edClosing:'الرسالة الأخيرة (تحت السؤال)',open:'🎀 افتحي',exitQ:'تخرجي من المتحف؟',stay:'ابقي',leave:'اخرجي',edNeed:'لازم تشوف كل الصور قبل النهاية',
-  edSong:'أغنيتها المفضلة (بتشتغل جنب الإطار الخامس)',edLetterVoice:'صوت للجواب',cinemaVideo:'فيديو غرفة السينما',cinemaVideoNote:'اختار فيديو يشتغل على تلفزيون الغرفة. هيتكرر من غير صوت ويتحفظ على الجهاز ده.',videoPick:'أضف فيديو',videoChange:'غيّر الفيديو',videoNearAdd:'🎬 أضف',videoNearChange:'🎬 غيّر',videoSaved:'تم اختيار الفيديو',photoBtn:'صورة / فيديو',clear:'مسح',recV:'🎙 صوت',stopV:'■ إيقاف',voiceOn:'الصوت محفوظ',songOn:'الأغنية محفوظة',
+  edSong:'أغنيتها المفضلة (بتشتغل جنب الإطار الخامس)',edLetterVoice:'صوت للجواب',cinemaVideo:'فيديو غرفة السينما',cinemaVideoNote:'اختار فيديو يشتغل على تلفزيون الغرفة. هيتكرر من غير صوت ويتحفظ على الجهاز ده.',videoPick:'أضف فيديو',videoChange:'غيّر الفيديو',videoNearAdd:'🎬 أضف',videoSaved:'تم اختيار الفيديو',photoBtn:'صورة / فيديو',clear:'مسح',recV:'🎙 صوت',stopV:'■ إيقاف',voiceOn:'الصوت محفوظ',songOn:'الأغنية محفوظة',
   date:'التاريخ (اختياري)',capt:'التعليق',songPick:'اختار أغنية',tooBig:'الملف كبير، ممكن يبطّأ',micFail:'الميكروفون مش متاح'}
 };
 var TEXT_FIELDS=[
@@ -832,15 +832,13 @@ function tvDraw(now){
   }
 }
 function updateCinemaUploadControl(){
-  var near=state==='explore'&&player.position.x>W/2+1.2&&player.position.z>-20.2&&player.position.z<-12.8&&Math.hypot(player.position.x-20.3,player.position.z+16.5)<6.2;
+  var near=state==='explore'&&!store.cinemaVideo&&player.position.x>W/2+1.2&&player.position.z>-20.2&&player.position.z<-12.8&&Math.hypot(player.position.x-20.3,player.position.z+16.5)<6.2;
   var pill=$('cinemaUploadPill'); pill.hidden=!near;
-  var btn=$('cinemaUploadBtn'), clear=$('cinemaClearBtn');
-  btn.textContent=store.cinemaVideo?t('videoNearChange'):t('videoNearAdd'); btn.title=btn.ariaLabel=store.cinemaVideo?t('videoChange'):t('videoPick');
-  clear.textContent='×'; clear.title=clear.ariaLabel=t('clear'); clear.hidden=!store.cinemaVideo;
+  var btn=$('cinemaUploadBtn');
+  btn.textContent=t('videoNearAdd'); btn.title=btn.ariaLabel=t('videoPick');
 }
 $('cinemaUploadBtn').addEventListener('click',function(){ if(state==='explore') $('cinemaUploadInput').click(); });
 $('cinemaUploadInput').addEventListener('change',function(){ var f=this.files&&this.files[0]; if(!f) return; if(f.size>40*1048576) toast(t('tooBig')); store.cinemaVideo=f; idbPut('cinemaVideo',f); syncCinemaVideo(); this.value=''; updateCinemaUploadControl(); });
-$('cinemaClearBtn').addEventListener('click',function(){ delete store.cinemaVideo; idbDel('cinemaVideo'); syncCinemaVideo(); updateCinemaUploadControl(); });
 function exitAsk(){ if($('exitBox').hidden===false) return; $('exitBox').hidden=false; }
 $('exitBtn').addEventListener('click',exitAsk);
 $('exitStay').addEventListener('click',function(){ $('exitBox').hidden=true; });
