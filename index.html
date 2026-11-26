@@ -2460,17 +2460,17 @@ function applyReact(av,r,dt,isMe){
   else if(n==='flower'){
     var recipient=av===player?npc:player, dx=recipient.position.x-av.position.x, dz=recipient.position.z-av.position.z, dist=Math.hypot(dx,dz);
     if(!ROLE||av===player){
-      if(dist>.55){ var step=Math.min(dist-.55,dt*2.5); av.position.x+=dx/dist*step; av.position.z+=dz/dist*step; }
+      if(dist>.65){ var step=Math.min(dist-.65,dt*2.5); av.position.x+=dx/dist*step; av.position.z+=dz/dist*step; }
       av.rotation.y=lerpAngle(av.rotation.y,Math.atan2(dx,dz),1-Math.exp(-dt*8));
     }
-    H(.08,-.12,.08); B(.025,0,.015); prep(); recipient.updateMatrixWorld(true);
+    H(.08,-.12,.08); B(.14,0,.015); prep(); recipient.updateMatrixWorld(true);
     var ru=recipient.userData; ru.hairFlower.position.x=.205; ru.hairFlowerTarget.x=.205;
     var fpos=ru.hairFlower.getWorldPosition(new THREE.Vector3()), fn=new THREE.Vector3(0,0,1).transformDirection(ru.hd.matrixWorld);
     var close=Math.hypot(recipient.position.x-av.position.x,recipient.position.z-av.position.z), reach=ease(clampN((1.15-close)/.65,0,1));
     var chest=G(.38,1.28,.2), raise=ease(clampN(t/.5,0,1))*reach, handTarget=chest.clone().lerp(fpos,raise);
     handTarget.lerp(chest,ease(clampN((t-1.55)/.45,0,1)));
     if(u.flowerArmBaseY==null) u.flowerArmBaseY=u.armL.scale.y;
-    u.armL.scale.y=mix(u.flowerArmBaseY,u.flowerArmBaseY*1.34,reach*w);
+    u.armL.scale.y=mix(u.flowerArmBaseY,u.flowerArmBaseY*1.5,reach*w);
     if(u.carriedFlower&&!r.placed) u.carriedFlower.visible=true;
     IK(-1,IK_PC,handTarget,fn,.35,[[-2.25,.22,-.9,.25],[-2.65,-.2,-.7,-.4],[-1.8,.65,-1.3,-.2]],w*reach);
     if(t>1.05&&close<=.72&&!r.placed){ r.placed=true; if(u.carriedFlower) u.carriedFlower.visible=false; if(ru.hairFlower) ru.hairFlower.visible=true; chime([79,84,88],.12,.1); }
