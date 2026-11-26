@@ -2018,18 +2018,9 @@ var loadTimer=setInterval(function(){
   var target=Math.min(1,(performance.now()-t0)/2300); if(!loaded) target=Math.min(target,.92);
   progress+=(target-progress)*.35; var p=Math.round(progress*100); if(loaded&&target>=1) p=100;
   $('barFill').style.width=p+'%'; $('pct').textContent=(p<100?t('prep'):t('ready'))+p+'%';
-  if(p>=100){ clearInterval(loadTimer); $('enter').disabled=false; $('enter').focus(); if(MUSEUM_MODE&&!museumStarted){ museumStarted=true; startExplore(); intro.hidden=true; intro.classList.remove('out'); } }
+  if(p>=100){ clearInterval(loadTimer); $('enter').disabled=false; $('enter').focus(); if(MUSEUM_MODE&&!museumStarted){ museumStarted=true; startExplore(); } }
 },90);
-var enterRedirecting=false;
-$('enter').addEventListener('click',function(){
-  if(state!=='intro'||enterRedirecting) return;
-  if(!MUSEUM_MODE&&!GIFT&&!ROLE&&!JOIN){
-    enterRedirecting=true; $('enter').disabled=true; intro.classList.add('out');
-    setTimeout(function(){ location.href='museum.html'; },1700);
-    return;
-  }
-  startExplore();
-});
+$('enter').addEventListener('click',function(){ if(state!=='intro') return; if(!MUSEUM_MODE&&!GIFT&&!ROLE&&!JOIN){ location.href='museum.html'; return; } startExplore(); });
 
 /* ---------- Customize panel ---------- */
 var draft=null, dStore=null, recState=null;
