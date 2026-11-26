@@ -2229,6 +2229,44 @@ function drawFeature(){
     COLL.push({x0:cx-.4,x1:cx+.4,z0:cz-.4,z1:cz+.4});
   }
   dcase(-3.6,-2,0); dcase(3.6,-2,1); dcase(-3.6,-34,1); dcase(3.6,-34,0);
+  /* Robert Indiana's LOVE as the focal sculpture in the center aisle */
+  (function(){
+    var sculpture=new THREE.Group(); sculpture.position.set(0,0,ZC); scene.add(sculpture);
+    var stone=new THREE.MeshStandardMaterial({color:0xe9e2d8,roughness:.48,metalness:.08});
+    var gold=new THREE.MeshStandardMaterial({color:0xd9b25e,roughness:.32,metalness:.62,emissive:0x392708,emissiveIntensity:.18});
+    var red=new THREE.MeshStandardMaterial({color:0xc83250,roughness:.34,metalness:.12,emissive:0x3b0814,emissiveIntensity:.16});
+    var dark=new THREE.MeshStandardMaterial({color:0x2a1820,roughness:.48,metalness:.25});
+    function cylinder(rt,rb,h,y,m){ var o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,48),m); o.position.y=y; sculpture.add(o); return o; }
+    cylinder(1.08,1.2,.18,.09,stone);
+    cylinder(1.0,1.08,.18,.27,gold);
+    cylinder(.96,1.02,.16,.43,stone);
+    var rim=new THREE.Mesh(new THREE.TorusGeometry(1.01,.022,8,64),gold); rim.rotation.x=Math.PI/2; rim.position.y=.52; sculpture.add(rim);
+    function shape(points){ var s=new THREE.Shape(); s.moveTo(points[0][0],points[0][1]); for(var i=1;i<points.length;i++) s.lineTo(points[i][0],points[i][1]); s.closePath(); return s; }
+    function roundedO(){
+      var s=new THREE.Shape(), w=.86, h=.86, r=.12;
+      s.moveTo(r,0); s.lineTo(w-r,0); s.quadraticCurveTo(w,0,w,r); s.lineTo(w,h-r); s.quadraticCurveTo(w,h,w-r,h); s.lineTo(r,h); s.quadraticCurveTo(0,h,0,h-r); s.lineTo(0,r); s.quadraticCurveTo(0,0,r,0);
+      var hole=new THREE.Path(); hole.absarc(w/2,h/2,.235,0,Math.PI*2,true); s.holes.push(hole); return s;
+    }
+    function glyph(s,x,y,tilt){
+      var geo=new THREE.ExtrudeGeometry(s,{depth:.22,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.025,bevelThickness:.035,curveSegments:18});
+      var mesh=new THREE.Mesh(geo,[gold,red]); mesh.position.set(-.43,-.43,0);
+      var holder=new THREE.Group(); holder.position.set(x+.43,y+.43,.02); holder.rotation.z=tilt||0; holder.add(mesh); sculpture.add(holder);
+    }
+    var L=shape([[0,0],[.86,0],[.86,.2],[.23,.2],[.23,.86],[0,.86]]);
+    var V=shape([[0,.86],[.25,.86],[.43,.35],[.61,.86],[.86,.86],[.59,0],[.43,.39],[.27,0]]);
+    var E=shape([[0,0],[.86,0],[.86,.2],[.23,.2],[.23,.34],[.73,.34],[.73,.53],[.23,.53],[.23,.66],[.86,.66],[.86,.86],[0,.86]]);
+    glyph(L,-.91,1.49,0); glyph(roundedO(),.05,1.49,-.18);
+    glyph(V,-.91,.59,0); glyph(E,.05,.59,0);
+    var plaque=new THREE.Mesh(new THREE.BoxGeometry(.94,.2,.045),dark); plaque.position.set(0,.27,1.05); sculpture.add(plaque);
+    var plaqueCv=document.createElement('canvas'); plaqueCv.width=512; plaqueCv.height=96; var px=plaqueCv.getContext('2d');
+    px.fillStyle='#2a1820'; px.fillRect(0,0,512,96); px.strokeStyle='#d9b25e'; px.lineWidth=4; px.strokeRect(5,5,502,86);
+    px.fillStyle='#f4e7d5'; px.textAlign='center'; px.textBaseline='middle'; px.font='600 28px Inter,sans-serif'; px.fillText('LOVE  ·  ROBERT INDIANA',256,50);
+    var plaqueText=new THREE.Mesh(new THREE.PlaneGeometry(.85,.14),new THREE.MeshBasicMaterial({map:canvasTex(plaqueCv)}));
+    plaqueText.position.set(0,.27,1.076); sculpture.add(plaqueText);
+    var floorRing=new THREE.Mesh(new THREE.TorusGeometry(1.42,.018,8,72),gold); floorRing.rotation.x=Math.PI/2; floorRing.position.y=.025; sculpture.add(floorRing);
+    var spot=new THREE.SpotLight(0xffe2c8,3.2,9,Math.PI/5,.62,1); spot.position.set(0,4.7,ZC+1.7); spot.target.position.set(0,1.2,ZC); scene.add(spot); scene.add(spot.target);
+    COLL.push({x0:-1.22,x1:1.22,z0:ZC-1.22,z1:ZC+1.22});
+  })();
 })();
 
 /* 5. sparkle / heart pool, emotes */
