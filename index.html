@@ -94,6 +94,11 @@ body.letterMode #mapBox,body.letterMode .brand,body.letterMode #hint,body.letter
 .bubble.gone span{opacity:0;translate:0 6px}
 
 /* Joystick */
+#capPill #capText{min-width:0;white-space:normal;word-break:normal;overflow-wrap:break-word;line-height:1.25}
+@media (pointer:coarse){
+  #capPill{left:calc(max(22px,env(safe-area-inset-left,0px)) + 142px);right:max(12px,env(safe-area-inset-right,0px));transform:none;max-width:none;bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 40px);border-radius:22px;padding:10px 10px 10px 16px;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+  #capPill #capText{flex:1 1 100%;font-size:14px;text-align:start}
+}
 #stick{position:absolute;z-index:25;left:max(22px,env(safe-area-inset-left,0px));bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 40px);width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--line);touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(244,240,234,.8)}
 
@@ -658,8 +663,15 @@ function tone(f,tm,dur,vol,type,lp,att){
   g.gain.setValueAtTime(0,tm); g.gain.linearRampToValueAtTime(vol,tm+(att||.012)); g.gain.exponentialRampToValueAtTime(.0001,tm+dur);
   o.connect(fl); fl.connect(g); g.connect(musicBus); o.start(tm); o.stop(tm+dur+.05);
 }
+var MOODS={
+  romantic:{en:'Romantic (default)',ar:'\u0631\u0648\u0645\u0627\u0646\u0633\u064a (\u0627\u0644\u0627\u0641\u062a\u0631\u0627\u0636\u064a)',step:.46,chords:CHORDS,arp:ARP,type:'triangle',lp:2600},
+  piano:{en:'Soft piano',ar:'\u0628\u064a\u0627\u0646\u0648 \u0647\u0627\u062f\u0626',step:.52,chords:[[48,60,64,67,71],[53,60,65,69,72],[55,62,67,71,74],[45,57,60,64,69]],arp:[1,3,2,4,3,2,4,3],type:'sine',lp:3200},
+  dreamy:{en:'Dreamy',ar:'\u062d\u0627\u0644\u0645',step:.62,chords:[[45,57,60,64,67],[41,57,60,65,69],[48,60,64,67,71],[43,59,62,67,69]],arp:[1,2,4,2,3,4,2,3],type:'sine',lp:2200},
+  lofi:{en:'Lo-fi chill',ar:'\u0644\u0648-\u0641\u0627\u064a \u0647\u0627\u062f\u0626',step:.4,chords:[[50,62,65,69,72],[55,62,65,70,74],[48,60,64,67,71],[45,57,60,64,67]],arp:[1,3,2,3,4,3,2,3],type:'triangle',lp:1400}
+}, curMood='romantic', customURL=null, customName='', bgmEl=null, bgmNode=null;
+function MOOD(){ return MOODS[curMood]||MOODS.romantic; }
 function playStep(s,tm){
-  var ch=CHORDS[Math.floor(s/8)%4], k=s%8, lvl=musicLevel;
+  var MD=MOOD(), ch=MD.chords[Math.floor(s/8)%4], k=s%8, lvl=musicLevel;
   if(k===0){
     tone(mtof(ch[0]),tm,3.6,.22,'sine',500,.02);
     if(lvl>.5) [1,2,3].forEach(function(i){ [-7,7].forEach(function(dt){
@@ -669,8 +681,8 @@ function playStep(s,tm){
       o.connect(fl); fl.connect(g); g.connect(musicBus); o.start(tm); o.stop(tm+4);
     }); });
   }
-  var n=ch[ARP[k]];
-  tone(mtof(n),tm,2.2,lvl>.5?.16:.11,'triangle',2600);
+  var n=ch[MD.arp[k]];
+  tone(mtof(n),tm,2.2,lvl>.5?.16:.11,MD.type,MD.lp);
   tone(mtof(n)*2,tm,1.2,.03,'sine',4000);
   if(lvl>.5&&(k===0||k===4||k===6)) tone(mtof(ch[k===4?3:4]+12),tm+.02,2.6,.09,'sine',3500);
   if(gardenOn&&k%2===0) tone(mtof(ch[[4,3,2,3][k/2]]+12),tm+.03,2.4,.07,'sine',3000);
@@ -678,9 +690,15 @@ function playStep(s,tm){
 function sched(){
   if(!AC) return;
   if(nextT<AC.currentTime) nextT=AC.currentTime+.05;
-  while(nextT<AC.currentTime+.7){ playStep(mstep,nextT); nextT+=.46; mstep++; }
+  while(nextT<AC.currentTime+.7){ playStep(mstep,nextT); nextT+=MOOD().step; mstep++; }
 }
-function startMusic(){ if(!AC||musicTimer) return; if(AC.state==='suspended') AC.resume(); nextT=AC.currentTime+.1; musicTimer=setInterval(sched,200); }
+function playCustom(){ if(!AC||!customURL) return;
+  try{ if(!bgmEl){ bgmEl=new Audio(); bgmEl.loop=true; bgmEl.preload='auto'; bgmEl.volume=.85; }
+    if(bgmEl.getAttribute('data-u')!==customURL){ bgmEl.src=customURL; bgmEl.setAttribute('data-u',customURL); }
+    if(!bgmNode){ bgmNode=AC.createMediaElementSource(bgmEl); bgmNode.connect(musicBus); }
+    if(AC.state==='suspended') AC.resume(); var pr=bgmEl.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){}
+}
+function startMusic(){ if(curMood==='custom'&&customURL){ playCustom(); return; } if(!AC||musicTimer) return; if(AC.state==='suspended') AC.resume(); nextT=AC.currentTime+.1; musicTimer=setInterval(sched,200); }
 function setDuck(v){ duck=v; if(AC) musicBus.gain.setTargetAtTime(.5*v*(muted?0:1),AC.currentTime,.3); }
 /* ---------- Real recorded sounds (files in /sounds, see sounds/CREDITS.txt) ---------- */
 var RS_BASE='sounds/', RS_CACHE={};
@@ -2540,6 +2558,62 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
 (function(){ var tm=tMusic, ts=tSfx, tools=document.getElementById('tools'); if(!tm||!ts||!tools) return;
   var row=document.createElement('div'); row.id='soundControls'; tools.insertBefore(row,tm); row.appendChild(emEl); row.appendChild(ts); row.appendChild(tm);
   var st=document.createElement('style'); st.textContent='#tools{display:flex;flex-direction:column;align-items:flex-end}#tHome{order:-3}#emotes{order:-2;position:relative;inset:auto;bottom:auto;inset-inline-end:auto;display:flex;flex-direction:column;align-items:flex-end;z-index:30;pointer-events:auto}#emotes[hidden]{display:none!important}#soundControls #emotes .em-main{width:38px;height:38px;min-height:38px;padding:0;border-radius:50%;justify-content:center;gap:0;box-shadow:0 4px 18px rgba(0,0,0,.28)}#emotes .tray{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:40}#soundControls{order:-1;display:flex;align-items:center;justify-content:flex-end;gap:8px;position:relative;pointer-events:none}#soundControls>*{pointer-events:auto}'; document.head.appendChild(st); try{ refreshExtra(); }catch(e){} })();
+/* ---------- Music picker: built-in moods + upload your own file ---------- */
+(function(){
+  var row=document.getElementById('soundControls'); if(!row) return;
+  var AR=function(){ return typeof LANG!=='undefined'&&LANG==='ar'; };
+  var btn=document.createElement('button'); btn.className='tool icon'; btn.id='tTrack'; btn.type='button'; btn.textContent='\uD83C\uDFB6'; btn.setAttribute('aria-expanded','false');
+  row.appendChild(btn);
+  var panel=document.createElement('div'); panel.id='musicPanel'; panel.hidden=true; row.appendChild(panel);
+  var st=document.createElement('style'); st.textContent='#musicPanel{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:min(290px,calc(100vw - 24px));padding:12px;border-radius:18px;background:rgba(34,16,28,.95);border:1px solid rgba(255,170,190,.3);box-shadow:0 14px 36px rgba(0,0,0,.5);color:#f6dfe5;font-size:13px;z-index:60;pointer-events:auto;backdrop-filter:blur(10px)}#musicPanel[hidden]{display:none!important}#musicPanel h4{margin:0 0 8px;font-size:14px;font-weight:700}#musicPanel button.mo{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 6px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;font:inherit;text-align:start;cursor:pointer}#musicPanel button.mo.on{background:linear-gradient(135deg,#ff9fb5,#ffc2cf);color:#4a1424;border-color:transparent;font-weight:700}#musicPanel .mo-up{background:rgba(255,255,255,.1)!important;justify-content:center}#musicPanel small{display:block;opacity:.7;line-height:1.35;margin-top:4px}#musicPanel .mo-del{background:none;border:0;color:#ffb3bf;font:inherit;padding:2px 0;cursor:pointer;text-decoration:underline}';
+  document.head.appendChild(st);
+  var file=document.createElement('input'); file.type='file'; file.accept='audio/*,.mp3,.m4a,.wav,.ogg,.aac'; file.hidden=true; document.body.appendChild(file);
+
+  function mdb(){ return new Promise(function(res,rej){ try{ var r=indexedDB.open('ourMuseumMusic',1); r.onupgradeneeded=function(){ r.result.createObjectStore('f'); }; r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(); }; }catch(e){ rej(); } }); }
+  function mput(v){ return mdb().then(function(db){ return new Promise(function(res){ var tx=db.transaction('f','readwrite'); tx.objectStore('f').put(v,'bgm'); tx.oncomplete=res; tx.onerror=res; }); }).catch(function(){}); }
+  function mget(){ return mdb().then(function(db){ return new Promise(function(res){ var q=db.transaction('f').objectStore('f').get('bgm'); q.onsuccess=function(){ res(q.result||null); }; q.onerror=function(){ res(null); }; }); }).catch(function(){ return null; }); }
+  function mdel(){ return mdb().then(function(db){ return new Promise(function(res){ var tx=db.transaction('f','readwrite'); tx.objectStore('f').delete('bgm'); tx.oncomplete=res; tx.onerror=res; }); }).catch(function(){}); }
+
+  function applyMood(key){
+    curMood=key; try{ localStorage.setItem('ourMuseumMood',key); }catch(e){}
+    if(typeof initAudio==='function') initAudio();
+    if(key==='custom'){ if(musicTimer){ clearInterval(musicTimer); musicTimer=0; } if(!muted) playCustom(); }
+    else { if(bgmEl) bgmEl.pause(); if(!muted&&typeof startMusic==='function') startMusic(); }
+    render();
+  }
+  function render(){
+    var ar=AR(), h='<h4>\uD83C\uDFB5 '+(ar?'\u0627\u062e\u062a\u0631 \u0645\u0648\u0633\u064a\u0642\u0627\u0643':'Choose your music')+'</h4>';
+    Object.keys(MOODS).forEach(function(k){ h+='<button type="button" class="mo'+(curMood===k?' on':'')+'" data-m="'+k+'">'+(curMood===k?'\u2713 ':'\u266A ')+(ar?MOODS[k].ar:MOODS[k].en)+'</button>'; });
+    if(customURL) h+='<button type="button" class="mo'+(curMood==='custom'?' on':'')+'" data-m="custom">'+(curMood==='custom'?'\u2713 ':'\uD83D\uDCC1 ')+(ar?'\u0645\u0648\u0633\u064a\u0642\u0627\u064a: ':'My music: ')+(customName||'')+'</button>';
+    h+='<button type="button" class="mo mo-up" id="moUp">\u2B06 '+(ar?'\u0627\u0631\u0641\u0639 \u0645\u0644\u0641 \u0645\u0648\u0633\u064a\u0642\u0649 \u062e\u0627\u0635':'Upload my own music file')+'</button>';
+    if(customURL) h+='<button type="button" class="mo-del" id="moDel">'+(ar?'\u062d\u0630\u0641 \u0645\u0644\u0641\u064a':'Remove my file')+'</button>';
+    h+='<small>'+(ar?'\u0627\u0644\u0645\u0644\u0641 \u064a\u0628\u0642\u0649 \u0639\u0644\u0649 \u062c\u0647\u0627\u0632\u0643 \u0641\u0642\u0637 (\u0644\u0627 \u064a\u064f\u0631\u0641\u0639 \u0644\u0623\u064a \u0645\u0643\u0627\u0646). \u0627\u062e\u062a\u0631 \u0623\u063a\u0646\u064a\u062a\u0643 \u0627\u0644\u0645\u0641\u0636\u0644\u0629 \u0645\u0646 \u062c\u0647\u0627\u0632\u0643.':'Your file stays on this device only and is never uploaded. Pick any favorite song you own.')+'</small>';
+    panel.innerHTML=h; btn.title=btn.ariaLabel=ar?'\u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0645\u0648\u0633\u064a\u0642\u0649':'Choose music';
+  }
+  panel.addEventListener('click',function(e){
+    var t=e.target.closest('button'); if(!t) return;
+    if(t.id==='moUp'){ file.click(); return; }
+    if(t.id==='moDel'){ mdel(); if(customURL){ try{ URL.revokeObjectURL(customURL); }catch(x){} } if(bgmEl){ bgmEl.pause(); } customURL=null; customName=''; applyMood('romantic'); return; }
+    if(t.getAttribute('data-m')) applyMood(t.getAttribute('data-m'));
+  });
+  file.addEventListener('change',function(){
+    var f=file.files&&file.files[0]; file.value=''; if(!f) return;
+    if(customURL){ try{ URL.revokeObjectURL(customURL); }catch(x){} }
+    customURL=URL.createObjectURL(f); customName=f.name.replace(/\.[^.]+$/,'').slice(0,28);
+    mput({blob:f,name:customName}); applyMood('custom');
+  });
+  btn.addEventListener('click',function(e){ e.stopPropagation(); panel.hidden=!panel.hidden; btn.setAttribute('aria-expanded',String(!panel.hidden)); if(!panel.hidden) render(); });
+  document.addEventListener('pointerdown',function(e){ if(!panel.hidden&&!panel.contains(e.target)&&e.target!==btn){ panel.hidden=true; btn.setAttribute('aria-expanded','false'); } });
+  // restore saved choice
+  var saved=null; try{ saved=localStorage.getItem('ourMuseumMood'); }catch(e){}
+  mget().then(function(v){
+    if(v&&v.blob){ customURL=URL.createObjectURL(v.blob); customName=v.name||''; }
+    if(saved==='custom'&&customURL) curMood='custom'; else if(saved&&MOODS[saved]) curMood=saved;
+    render();
+  });
+  render();
+})();
+
 var REACTS=['wave','heart','kiss','clap','cheer','laugh','cry','dance','jump','shy','flower','wow','hand','sit'];
 var RLAB={en:{wave:'Wave',heart:'Heart hands',kiss:'Blow a kiss',clap:'Clap',cheer:'Cheer',laugh:'Laugh',cry:'Cry',dance:'Dance',jump:'Jump',shy:'Shy',flower:'Put a flower in her hair',flowerWait:'Move closer together',wow:'Wow',hand:'Hold hands',sit:'Sit',main:'React'},ar:{wave:'لوّح',heart:'قلب بإيديكي',kiss:'ابعتي بوسة',clap:'صفّقي',cheer:'هلّلي',laugh:'اضحكي',cry:'عيّطي',dance:'ارقصي',jump:'نطّي',shy:'اتكسفي',flower:'حط وردة في شعرها',flowerWait:'قرّبوا من بعض',wow:'يا سلام',hand:'امسكي إيده',sit:'اقعدي',main:'تفاعل'}};
 var RDUR={wave:2.4,heart:3.2,kiss:2.6,clap:2.8,cheer:2.6,laugh:3,cry:3.4,dance:4.5,jump:.75,shy:3,flower:2.6,wow:2.4,hand:30};
