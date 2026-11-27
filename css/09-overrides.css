@@ -11,3 +11,9 @@
 #emotes .tray .em-note[hidden]{display:none}
 /* hint never sits on the joystick */
 @media (pointer:coarse){#hint{bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 40px + 140px);max-width:calc(100% - 32px);white-space:normal}}
+
+/* Arabic dots (nuqat) were clipped by background-clip:text with line-height:1 */
+.ticket #introTitle{line-height:1.45;padding:.14em .06em .2em;margin:-.14em 0 -.2em;overflow:visible}
+.ticket .tk-top{direction:ltr;display:flex;align-items:center;justify-content:center;gap:.5em;white-space:nowrap}
+.ticket .tk-top .tk-ar{letter-spacing:0;font-size:1.25em;text-transform:none;font-family:"IBM Plex Sans Arabic",sans-serif}
+.ticket .tk-top .tk-dot{letter-spacing:0;color:#d93f5a}

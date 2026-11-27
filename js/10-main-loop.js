@@ -106,7 +106,12 @@ function frame(now){
     h.material.opacity=heartsK*.8*Math.min(1,(3.4-d.y)/1.2)*Math.min(1,d.y/.6);
   });
   if(window.giftTick) giftTick(dt,now);
-  if(letterOn!==avHid){ avHid=letterOn; player.visible=npc.visible=!letterOn; }
+  if(letterOn!==avHid){ avHid=letterOn; player.visible=npc.visible=true; }
+  if(letterOn){ /* characters stand beside the letter board, facing the viewer */
+    var lyz=ZB+1.3; player.position.set(-5.7,player.position.y,lyz); npc.position.set(5.7,npc.position.y,lyz);
+    player.rotation.y=lerpAngle(player.rotation.y,.38,1-Math.exp(-dt*6)); npc.rotation.y=lerpAngle(npc.rotation.y,-.38,1-Math.exp(-dt*6));
+    pose(player,false,dt); pose(npc,false,dt);
+  }
   updateLights(dt,now); fxUpdate(dt,now,moving); if(state==='explore') clampPlayer(npc.position);
   var rs0=(ROLE==='host'&&linked&&state==='explore'&&!ringBusy); if(rs0!==ringShown){ ringShown=rs0; $('tRing').hidden=!rs0; }
 
