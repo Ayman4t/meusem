@@ -68,7 +68,21 @@ function dkFinale(skipped){
     g(function(){ if(!flags.l4){ flags.l4=true; say('npc',C('l4'),3400); } },skipped?9200:10200);
   }
 }
-$('darkSkip').addEventListener('click',function(){ if(DK.on) dkFinale(true); });
+/* Skip: fade to black, switch the whole museum on while hidden, fade back in.
+   No half-lit frames are ever shown, so nothing can flash. */
+(function(){
+  var f=document.createElement('div'); f.id='dkFade';
+  f.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:95;transition:opacity .28s ease';
+  document.body.appendChild(f);
+  $('darkSkip').addEventListener('click',function(){
+    if(!DK.on||DK.fin||DK.skipping) return; DK.skipping=true;
+    f.style.pointerEvents='auto'; f.style.opacity='1';
+    setTimeout(function(){
+      if(DK.on&&!DK.fin){ dkFinale(true); DK.fadeDur=.02; }
+      setTimeout(function(){ f.style.transition='opacity .8s ease'; f.style.opacity='0'; f.style.pointerEvents='none'; DK.skipping=false; setTimeout(function(){ f.style.transition='opacity .28s ease'; },900); },220);
+    },300);
+  });
+})();
 function dkEnd(){
   DK.on=false; DKU.S.x=0; DKU.S.w=0; dkBeam.visible=false; dkRing.visible=false;
   document.body.classList.remove('dk'); $('darkSkip').hidden=true; $('darkHearts').hidden=true;
