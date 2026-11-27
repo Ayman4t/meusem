@@ -409,9 +409,11 @@ body{background:#1a0d14}
 #capPill #capOpen{background:linear-gradient(135deg,#fff3f0,#ffc2cf)!important;color:#5a1a2c!important}
 #capPill #capBtn,#capPill #capListen{background:rgba(255,255,255,.92)!important;color:#5a1a2c!important}
 /* Light, clear icon buttons: React, sound effects, music, music picker */
-#soundControls .tool.icon,#soundControls #emotes .em-main{background:rgba(255,247,249,.94)!important;border:1px solid #fff!important;color:#5a1a2c!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;width:42px!important;height:42px!important;min-height:42px!important;font-size:20px!important;opacity:1!important}
-#soundControls #emotes .em-main svg{width:20px;height:20px;color:#e0405f;fill:#e0405f}
+#soundControls .tool.icon,#soundControls #emotes .em-main{background:rgba(255,247,249,.94)!important;border:1px solid #fff!important;color:#5a1a2c!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;font-size:16px!important;opacity:1!important}
+#soundControls #emotes .em-main svg{width:16px;height:16px;color:#e0405f;fill:#e0405f}
 #soundControls .tool.icon:active,#soundControls #emotes .em-main:active{transform:scale(.94)}
+#askMini{position:absolute;z-index:60;inset-inline-end:max(12px,env(safe-area-inset-right,0px));top:calc(max(12px,env(safe-area-inset-top,0px)) + 52px);display:flex;gap:8px;pointer-events:auto}
+#askMini .tool.icon{width:34px;height:34px;min-height:34px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(255,247,249,.94)!important;border:1px solid #fff!important;color:#5a1a2c!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;opacity:1!important;cursor:pointer}
 </style>
 </head>
 <body>
@@ -480,6 +482,7 @@ body{background:#1a0d14}
       <span class="no-slot" id="noSlot"></span>
       <button class="no" id="no"></button>
     </div>
+    <div id="askMini"><button type="button" id="amSfx" class="tool icon"></button><button type="button" id="amMusic" class="tool icon"></button><button type="button" id="amTrack" class="tool icon">🎶</button></div>
     <div id="askTools" hidden>
       <button class="ghost sm" id="askSfx" type="button"></button>
       <button class="ghost sm" id="askShot"></button>
@@ -1653,6 +1656,7 @@ $('tourStop').addEventListener('click',function(){ if(museumTour.active){ finish
 function refreshExtra(){
   var ar=LANG==='ar';
   if($('askSfx')){ $('askSfx').textContent=(sfxMuted?'\uD83D\uDD07 ':'\uD83D\uDD0A ')+(ar?'\u0627\u0644\u0645\u0624\u062b\u0631\u0627\u062a \u0627\u0644\u0635\u0648\u062a\u064a\u0629':'Sound effects'); $('askSfx').setAttribute('aria-pressed',String(!sfxMuted)); }
+  if($('amMusic')){ $('amMusic').textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; $('amSfx').textContent=sfxMuted?'\uD83D\uDD07':'\uD83D\uDD0A'; }
   tMusic.textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; tMusic.title=tMusic.ariaLabel=muted?(ar?'تشغيل الموسيقى':'Turn music on'):(ar?'إيقاف الموسيقى':'Turn music off');
   tSfx.textContent=sfxMuted?'\uD83D\uDD07':'\uD83D\uDD0A'; tSfx.title=tSfx.ariaLabel=sfxMuted?(ar?'تشغيل أصوات المتحف':'Turn museum sounds on'):(ar?'إيقاف أصوات المتحف':'Turn museum sounds off');
   tLook.textContent='\uD83D\uDC57 '+(ar?'تخصيص الشخصيات':'Customize');
@@ -1662,6 +1666,8 @@ function refreshExtra(){
 }
 tMusic.addEventListener('click',function(){ setMuted(!muted); try{ localStorage.setItem('ourMuseumMuted',muted?'1':'0'); }catch(e){} if(!muted&&typeof initAudio==='function'){ initAudio(); startMusic(); } refreshExtra(); });
 $('askSfx').addEventListener('click',function(){ tSfx.click(); });
+$('amSfx').addEventListener('click',function(){ tSfx.click(); });
+$('amMusic').addEventListener('click',function(){ tMusic.click(); });
 tSfx.addEventListener('click',function(){ setSfxMuted(!sfxMuted); try{ localStorage.setItem('ourMuseumSfxMuted',sfxMuted?'1':'0'); }catch(e){} refreshExtra(); });
 
 /* customizer panel with its own live 3D preview */
@@ -2569,15 +2575,15 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
 /* Top bar order: Intro, React (right under it), then Sound effects + Music. */
 (function(){ var tm=tMusic, ts=tSfx, tools=document.getElementById('tools'); if(!tm||!ts||!tools) return;
   var row=document.createElement('div'); row.id='soundControls'; tools.insertBefore(row,tm); row.appendChild(emEl); row.appendChild(ts); row.appendChild(tm);
-  var st=document.createElement('style'); st.textContent='#tools{display:flex;flex-direction:column;align-items:flex-end}#tHome{order:-3}#emotes{order:-2;position:relative;inset:auto;bottom:auto;inset-inline-end:auto;display:flex;flex-direction:column;align-items:flex-end;z-index:30;pointer-events:auto}#emotes[hidden]{display:none!important}#soundControls #emotes .em-main{width:38px;height:38px;min-height:38px;padding:0;border-radius:50%;justify-content:center;gap:0;box-shadow:0 4px 18px rgba(0,0,0,.28)}#emotes .tray{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:40}#soundControls{order:-1;display:flex;align-items:center;justify-content:flex-end;gap:8px;position:relative;pointer-events:none}#soundControls>*{pointer-events:auto}'; document.head.appendChild(st); try{ refreshExtra(); }catch(e){} })();
+  var st=document.createElement('style'); st.textContent='#tools{display:flex;flex-direction:column;align-items:flex-end}#tHome{order:-3}#emotes{order:-2;position:relative;inset:auto;bottom:auto;inset-inline-end:auto;display:flex;flex-direction:column;align-items:flex-end;z-index:30;pointer-events:auto}#emotes[hidden]{display:none!important}#soundControls #emotes .em-main{width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;justify-content:center;gap:0;box-shadow:0 4px 18px rgba(0,0,0,.28)}#emotes .tray{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:40}#soundControls{order:-1;display:flex;align-items:center;justify-content:flex-end;gap:8px;position:relative;pointer-events:none}#soundControls>*{pointer-events:auto}'; document.head.appendChild(st); try{ refreshExtra(); }catch(e){} })();
 /* ---------- Music picker: built-in moods + upload your own file ---------- */
 (function(){
   var row=document.getElementById('soundControls'); if(!row) return;
   var AR=function(){ return typeof LANG!=='undefined'&&LANG==='ar'; };
   var btn=document.createElement('button'); btn.className='tool icon'; btn.id='tTrack'; btn.type='button'; btn.textContent='\uD83C\uDFB6'; btn.setAttribute('aria-expanded','false');
   row.appendChild(btn);
-  var panel=document.createElement('div'); panel.id='musicPanel'; panel.hidden=true; row.appendChild(panel);
-  var st=document.createElement('style'); st.textContent='#musicPanel{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:min(290px,calc(100vw - 24px));padding:12px;border-radius:18px;background:rgba(34,16,28,.95);border:1px solid rgba(255,170,190,.3);box-shadow:0 14px 36px rgba(0,0,0,.5);color:#f6dfe5;font-size:13px;z-index:60;pointer-events:auto;backdrop-filter:blur(10px)}#musicPanel[hidden]{display:none!important}#musicPanel h4{margin:0 0 8px;font-size:14px;font-weight:700}#musicPanel button.mo{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 6px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;font:inherit;text-align:start;cursor:pointer}#musicPanel button.mo.on{background:linear-gradient(135deg,#ff9fb5,#ffc2cf);color:#4a1424;border-color:transparent;font-weight:700}#musicPanel .mo-up{background:rgba(255,255,255,.1)!important;justify-content:center}#musicPanel small{display:block;opacity:.7;line-height:1.35;margin-top:4px}#musicPanel .mo-del{background:none;border:0;color:#ffb3bf;font:inherit;padding:2px 0;cursor:pointer;text-decoration:underline}';
+  var panel=document.createElement('div'); panel.id='musicPanel'; panel.hidden=true; document.body.appendChild(panel);
+  var st=document.createElement('style'); st.textContent='#musicPanel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);inset-inline-end:12px;width:min(290px,calc(100vw - 24px));padding:12px;border-radius:18px;background:rgba(34,16,28,.95);border:1px solid rgba(255,170,190,.3);box-shadow:0 14px 36px rgba(0,0,0,.5);color:#f6dfe5;font-size:13px;z-index:400;pointer-events:auto;backdrop-filter:blur(10px)}#musicPanel[hidden]{display:none!important}#musicPanel h4{margin:0 0 8px;font-size:14px;font-weight:700}#musicPanel button.mo{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 6px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;font:inherit;text-align:start;cursor:pointer}#musicPanel button.mo.on{background:linear-gradient(135deg,#ff9fb5,#ffc2cf);color:#4a1424;border-color:transparent;font-weight:700}#musicPanel .mo-up{background:rgba(255,255,255,.1)!important;justify-content:center}#musicPanel small{display:block;opacity:.7;line-height:1.35;margin-top:4px}#musicPanel .mo-del{background:none;border:0;color:#ffb3bf;font:inherit;padding:2px 0;cursor:pointer;text-decoration:underline}';
   document.head.appendChild(st);
   var file=document.createElement('input'); file.type='file'; file.accept='audio/*,.mp3,.m4a,.wav,.ogg,.aac'; file.hidden=true; document.body.appendChild(file);
 
@@ -2614,8 +2620,10 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
     customURL=URL.createObjectURL(f); customName=f.name.replace(/\.[^.]+$/,'').slice(0,28);
     mput({blob:f,name:customName}); applyMood('custom');
   });
-  btn.addEventListener('click',function(e){ e.stopPropagation(); panel.hidden=!panel.hidden; btn.setAttribute('aria-expanded',String(!panel.hidden)); if(!panel.hidden) render(); });
-  document.addEventListener('pointerdown',function(e){ if(!panel.hidden&&!panel.contains(e.target)&&e.target!==btn){ panel.hidden=true; btn.setAttribute('aria-expanded','false'); } });
+  function togglePanel(e){ if(e) e.stopPropagation(); panel.hidden=!panel.hidden; btn.setAttribute('aria-expanded',String(!panel.hidden)); if(!panel.hidden) render(); }
+  btn.addEventListener('click',togglePanel);
+  var am=document.getElementById('amTrack'); if(am) am.addEventListener('click',togglePanel);
+  document.addEventListener('pointerdown',function(e){ if(!panel.hidden&&!panel.contains(e.target)&&!(e.target.closest&&e.target.closest('#tTrack,#amTrack'))){ panel.hidden=true; btn.setAttribute('aria-expanded','false'); } });
   // restore saved choice
   var saved=null; try{ saved=localStorage.getItem('ourMuseumMood'); }catch(e){}
   mget().then(function(v){
