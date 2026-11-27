@@ -466,6 +466,28 @@ body.dk #tools,body.dk #mapBox,body.dk .brand{opacity:0;pointer-events:none}
 /* hint never sits on the joystick */
 @media (pointer:coarse){#hint{bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 40px + 140px);max-width:calc(100% - 32px);white-space:normal}}
 </style>
+<style id="giftCss">
+#giftBtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 110px);z-index:31;padding:12px 24px;border:0;border-radius:999px;background:linear-gradient(135deg,#f0617d,#b02a48);color:#fff;font-weight:700;font-size:15px;box-shadow:0 10px 26px rgba(232,80,107,.5),inset 0 1px 0 rgba(255,255,255,.35);animation:gbPulse 1.8s ease-in-out infinite;max-width:calc(100% - 32px)}
+#giftBtn[hidden]{display:none}
+@keyframes gbPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
+@media (pointer:coarse){#giftBtn{bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 200px)}}
+#giftModal{position:absolute;inset:0;z-index:88;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,10,.72);backdrop-filter:blur(5px)}
+#giftModal[hidden]{display:none}
+.gm-card{width:min(360px,100%);background:#fff6f0;color:#3a1d28;border-radius:22px;padding:24px 22px 20px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.gm-card.shake{animation:gmShake .45s}
+@keyframes gmShake{0%,100%{transform:none}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.gm-lock{font-size:42px;line-height:1}
+.gm-card h3{margin:0;font-family:var(--serif);font-size:22px}
+.gm-card p{margin:0;font-size:14px;line-height:1.5;color:#6b4553}
+.gm-card input{height:46px;border-radius:14px;border:1px solid rgba(217,63,90,.4);background:#fff;color:#3a1d28;text-align:center;font:inherit;font-size:18px;letter-spacing:.06em;padding:0 12px}
+.gm-card input:focus{outline:2px solid #d93f5a}
+.gm-hint{font-size:13px!important;color:#9a6676!important}
+.gm-err{min-height:18px;color:#c2284a!important;font-weight:600;font-size:13px!important}
+.gm-row{display:flex;gap:8px}
+.gm-row button{flex:1;height:44px;border-radius:999px;border:0;font-weight:700;font-size:15px}
+.gm-ok{background:linear-gradient(135deg,#f0617d,#b02a48);color:#fff}
+.gm-no{background:#f0e1dc;color:#6b4553}
+</style>
 </head>
 <body>
 
@@ -497,6 +519,14 @@ body.dk #tools,body.dk #mapBox,body.dk .brand{opacity:0;pointer-events:none}
   <div id="stick" hidden><div id="knob"></div></div>
   <div id="toast"></div>
   <div id="liveChat" hidden><input id="lcIn" type="text" maxlength="80"><button class="ghost sm" id="lcGo"></button></div>
+
+  <button id="giftBtn" type="button" hidden></button>
+  <div id="giftModal" hidden><div class="gm-card" role="dialog" aria-modal="true" aria-labelledby="gmT">
+    <div class="gm-lock" aria-hidden="true">🔒</div><h3 id="gmT"></h3><p id="gmS"></p>
+    <input id="gmIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40">
+    <p class="gm-hint" id="gmH"></p><p class="gm-err" id="gmE" aria-live="polite"></p>
+    <div class="gm-row"><button type="button" class="gm-ok" id="gmOk"></button><button type="button" class="gm-no" id="gmNo"></button></div>
+  </div></div>
 
   <section id="intro">
     <div class="door" id="doorL"></div><div class="door" id="doorR"></div>
@@ -589,15 +619,15 @@ var PRISTINE='<!doctype html>\n'+document.documentElement.outerHTML;
 var PRESET = null;
 
 /* ---------- Content ---------- */
-var TEXT_KEYS=['title','from','to','question','sub','final','l1','l2','l3','l4','l5','l6','letter','secret','coupon','closing'];
+var TEXT_KEYS=['title','from','to','question','sub','final','l1','l2','l3','l4','l5','l6','letter','secret','coupon','closing','gpass','ghint'];
 var DEFS={
- en:{title:'Museum of Love',from:'Adam',to:'Laila',question:'Will you marry me?',sub:'i made you a whole museum 🥹',final:'forever starts now',
+ en:{title:'Museum of Love',gpass:'love',ghint:'Hint: the one thing this whole museum is about 💕',from:'Adam',to:'Laila',question:'Will you marry me?',sub:'i made you a whole museum 🥹',final:'forever starts now',
   l1:'a whole museum?? 😍',l2:'hi baby 💕',l3:'do you like it? I made it for you',l4:'keep going, one more thing',l5:'wait... come here',l6:'omgg whattt 😳',
   letter:'Maybe I am not the best with words, but what I am sure of is that you changed my life in a way I never imagined. I want to always be the one who chooses you, every single day, anew; to share your laughter on your good days, and to be your support and your rest when you are tired.',
   secret:'You found the secret room.\nI knew you would. 🤍',coupon:'One date night, planned by me. Valid forever.',
   closing:'Maybe I am not the best with words, but what I am sure of is that you changed my life in a way I never imagined. I want to always be the one who chooses you, every single day, anew; to share your laughter on your good days, and to be your support and your rest when you are tired.',
   captions:['The day we met','Our first call','That one dinner','The trip we planned','Your favourite song','Late night talks','The photo you hate','Next time, together']},
- ar:{title:'متحف الحب',from:'آدم',to:'ليلى',question:'تتجوزيني؟',sub:'عملتلك متحف كامل 🥹',final:'من هنا بتبدأ حكايتنا للأبد',
+ ar:{title:'متحف الحب',gpass:'حب',ghint:'تلميح: الحاجة اللي المتحف ده كله عنها 💕',from:'آدم',to:'ليلى',question:'تتجوزيني؟',sub:'عملتلك متحف كامل 🥹',final:'من هنا بتبدأ حكايتنا للأبد',
   l1:'متحف كامل؟؟ 😍',l2:'أهلاً يا قلبي 💕',l3:'عجبك؟ أنا عملته عشانك',l4:'كمّلي، فاضل حاجة أخيرة',l5:'استني... تعالي هنا',l6:'يا نهار أبيض 😳',
   letter:'يمكن مش أشطر واحد في تزويق الكلام، بس اللي متأكد منه إن وجودك فرق في حياتي بطريقة مكنتش متخيلها، ونفسي أكون دايماً الشخص اللي بيختارك كل يوم من جديد؛ أشاركك ضحكتك في أيامك الحلوة، وأكون سندك وراحتك في وقت تعبك',
   secret:'لقيتي الأوضة السرية.\nكنت عارف إنك هتلاقيها. 🤍',coupon:'خروجة كاملة من تخطيطي. صالحة للأبد.',
@@ -1602,6 +1632,7 @@ var ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
 canvas.addEventListener('click',function(e){
   if(state!=='explore'||drag.dist>8) return;
   var r=canvas.getBoundingClientRect(); mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(mouse,camera);
+  if(window.GIFT&&GIFT.locked&&!GIFT.opening&&GIFT.pick&&ray.intersectObjects(GIFT.pick)[0]){ giftAsk(); return; }
   var targets=photoMeshes, hit=ray.intersectObjects(targets)[0];
   if(!hit) return;
   if(hit.object===couponMesh) openLightboxSrc(couponCanvas.toDataURL('image/png'),'');
@@ -2268,7 +2299,7 @@ function frame(now){
     frames.forEach(function(f,i){ if(dkOn()&&!dkLit(i)) return; var d=Math.hypot(f.x-px0,f.z-pz); if(d<5.4&&!found[i]){ found[i]=1; chime([84,88],.12,.12); } if(d<bd){ bd=d; best=i; } });
     if(pz>=-28.5&&pz<=-22.5&&Math.abs(px0)>13.7) best=-1; /* inside the photo booth / drawing studio: no painting caption */
     if(state==='explore') setNear(best);
-    var nearExit=Math.hypot(px0-EXITPOS.x,pz-EXITPOS.z)<3.4; $('exitPill').hidden=!nearExit;
+    var nearExit=Math.hypot(px0-EXITPOS.x,pz-EXITPOS.z)<3.4; $('exitPill').hidden=!nearExit; if(window.giftUpdate) giftUpdate(px0,pz);
     if(state==='explore') updateMuseumTour(now);
   } else $('exitPill').hidden=true;
   tvDraw(now);
@@ -2293,6 +2324,7 @@ function frame(now){
     d.y+=d.v*dt; if(d.y>3.4) d.y=.4; h.position.set(d.bx+Math.sin(now*.001+d.ph)*.25,d.y,d.bz);
     h.material.opacity=heartsK*.8*Math.min(1,(3.4-d.y)/1.2)*Math.min(1,d.y/.6);
   });
+  if(window.giftTick) giftTick(dt,now);
   if(letterOn!==avHid){ avHid=letterOn; player.visible=npc.visible=!letterOn; }
   updateLights(dt,now); fxUpdate(dt,now,moving); if(state==='explore') clampPlayer(npc.position);
   var rs0=(ROLE==='host'&&linked&&state==='explore'&&!ringBusy); if(rs0!==ringShown){ ringShown=rs0; $('tRing').hidden=!rs0; }
@@ -2438,7 +2470,7 @@ function openEditor(){
     inp.addEventListener('input',function(){ draft[f[0]]=inp.value; }); w.appendChild(lab); w.appendChild(inp); tx.appendChild(w);
   });
   var ex=$('edExtra'); ex.innerHTML='';
-  [['letter',t('edLetter'),true],['secret',t('edSecret'),true],['closing',t('edClosing'),true],['coupon',t('edCoupon'),false]].forEach(function(f){
+  [['letter',t('edLetter'),true],['secret',t('edSecret'),true],['closing',t('edClosing'),true],['coupon',t('edCoupon'),false],['gpass',LANG==='ar'?'كلمة سر الهدية (صورة الأوضة السرية)':'Gift password (secret-room photo)',false],['ghint',LANG==='ar'?'تلميح كلمة السر':'Password hint',false]].forEach(function(f){
     var w=el('div','fld'), lab=el('label','',f[1]); w.appendChild(lab); draft[f[0]]=C(f[0]);
     var inp=f[2]?document.createElement('textarea'):document.createElement('input'); if(!f[2]) inp.type='text'; inp.value=draft[f[0]]; inp.maxLength=600;
     inp.addEventListener('input',function(){ draft[f[0]]=inp.value; }); w.appendChild(inp); ex.appendChild(w);
@@ -2551,6 +2583,7 @@ function swapAvatars(){
 function onLinked(){ linked=true; flags.l3=flags.l4=true; herDark=false; if(ROLE==='guest'&&DK.on&&!DK.fin) send({t:'dk',v:1}); toast(ROLE==='host'?lt('here')+' · '+lt('ringHint'):lt('hereG'),ROLE==='host'?5000:3000); chime([76,81],.12,.15); roomsLinked(); $('liveChat').hidden=false; $('lcIn').placeholder=lt('say'); $('lcGo').textContent=lt('send'); if(ROLE==='host') $('invSt').textContent=lt('here'); }
 function onMsg(d){
   if(!d||!d.t) return;
+  if(d.t==='gift'){ if(window.giftUnlock) giftUnlock(true); return; }
   if(d.t==='dk'){ if(ROLE==='host'){ herDark=!!d.v; toast(herDark?lt('dkOn'):lt('dkOff'),4200); if(!herDark) chime([76,81,88],.12,.15); } return; }
   if(d.t==='p'){ if(!rem.got){ rem.got=true; npc.position.set(d.x,0,d.z); } rem.x=d.x; rem.z=d.z; rem.r=d.r; rem.m=d.m; rem.y=d.y||0; rem.c=d.c||0; var sitNow=d.s?1:0; if((rem.s||0)!==sitNow) playReactSound('sit'); rem.s=sitNow; }
   else if(d.t==='say'){ say('npc',String(d.s).slice(0,80),3500); }
@@ -2726,6 +2759,72 @@ function drawFeature(){
   var plb=new THREE.Mesh(new THREE.BoxGeometry(1.52,.62,.04),new THREE.MeshStandardMaterial({color:0x0c0c0e,roughness:.5})); plb.position.copy(plq.position); plb.position.x-=.03; plb.rotation.copy(plq.rotation); scene.add(plb);
   COLL.push({x0:FX,x1:FX+2.3,z0:FZ-2.3,z1:FZ+2.3});
   drawFeature();
+
+  /* ---- gift wrap + padlock over the secret-room photo; opens with a password ---- */
+  (function(){
+    var GIFT=window.GIFT={locked:true,opening:false,k:0,pick:[],mats:[]};
+    var cg=new THREE.Group(); cg.position.z=.1; big.add(cg); GIFT.grp=cg;
+    function M(o){ o.transparent=true; var m=new THREE.MeshStandardMaterial(o); GIFT.mats.push(m); return m; }
+    var pw=bw+.2, ph2=bh+.2;
+    var wrapTex=gTex(512,640,function(x,w,h){
+      var g=x.createLinearGradient(0,0,w,h); g.addColorStop(0,'#e0506b'); g.addColorStop(1,'#9c2640'); x.fillStyle=g; x.fillRect(0,0,w,h);
+      x.fillStyle='rgba(255,226,232,.34)'; for(var r=0;r<9;r++) for(var c=0;c<7;c++){ heartPath(x,(c+(r%2?.5:0))*78+22,r*76+40,13); x.fill(); }
+      var sh=x.createLinearGradient(0,0,w,0); sh.addColorStop(0,'rgba(255,255,255,.14)'); sh.addColorStop(.5,'rgba(255,255,255,0)'); sh.addColorStop(1,'rgba(0,0,0,.14)'); x.fillStyle=sh; x.fillRect(0,0,w,h);
+    });
+    var paper=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph2),M({map:wrapTex,roughness:.5})); cg.add(paper); GIFT.pick.push(paper);
+    var gold=M({color:0xe8c26e,roughness:.3,metalness:.55,emissive:0x3a2a0c}), cream=M({color:0xfff0d8,roughness:.45});
+    var rv=new THREE.Mesh(new THREE.PlaneGeometry(.26,ph2),cream); rv.position.z=.012; cg.add(rv);
+    var rh=new THREE.Mesh(new THREE.PlaneGeometry(pw,.26),cream); rh.position.z=.014; cg.add(rh);
+    [rv,rh].forEach(function(r){ GIFT.pick.push(r); });
+    /* bow */
+    var bow=new THREE.Group(); bow.position.set(0,ph2/2-.12,.05); cg.add(bow);
+    [-1,1].forEach(function(sd){ var lp=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),cream); lp.scale.set(.3,.17,.07); lp.position.set(sd*.24,.07,0); lp.rotation.z=sd*.5; bow.add(lp); GIFT.pick.push(lp);
+      var tl=new THREE.Mesh(new THREE.PlaneGeometry(.1,.3),cream); tl.position.set(sd*.1,-.2,-.005); tl.rotation.z=sd*.28; bow.add(tl); });
+    var kn=new THREE.Mesh(new THREE.SphereGeometry(.09,14,10),cream); kn.position.z=.03; bow.add(kn);
+    /* padlock */
+    var lock=new THREE.Group(); lock.position.set(0,-.02,.12); cg.add(lock); GIFT.lock=lock;
+    var body=new THREE.Mesh(new THREE.BoxGeometry(.56,.44,.2),gold); lock.add(body); GIFT.pick.push(body);
+    var plate=new THREE.Mesh(new THREE.BoxGeometry(.46,.34,.02),M({color:0xf6d98e,roughness:.25,metalness:.6})); plate.position.z=.105; lock.add(plate);
+    var hole=new THREE.Mesh(new THREE.CircleGeometry(.05,16),M({color:0x2a1a10,roughness:1})); hole.position.set(0,.04,.117); lock.add(hole);
+    var slot=new THREE.Mesh(new THREE.BoxGeometry(.03,.11,.004),M({color:0x2a1a10,roughness:1})); slot.position.set(0,-.05,.117); lock.add(slot);
+    var shp=new THREE.Group(); shp.position.set(.17,.21,0); lock.add(shp); GIFT.shp=shp;
+    var sk=new THREE.Mesh(new THREE.TorusGeometry(.17,.045,12,28,Math.PI),gold); sk.position.x=-.17; shp.add(sk); GIFT.pick.push(sk);
+    var lg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.06,10),gold); lg.position.set(-.34,-.03,0); shp.add(lg);
+    var BTN=$('giftBtn'), MOD=$('giftModal'), IN=$('gmIn'), CARD=MOD.querySelector('.gm-card'), tries=0;
+    function G(){ var ar=LANG==='ar'; return ar?{btn:'🎁 افتحي الهدية',t:'هدية مقفولة 🎁',s:'اكتبي كلمة السر عشان تفتحيها',ph:'كلمة السر',ok:'افتحي 🔓',no:'مش دلوقتي',bad:'كلمة السر غلط، جرّبي تاني 💭',done:'اتفتحت! 💕'}:{btn:'🎁 Open the gift',t:'A locked gift 🎁',s:'Type the password to open it',ph:'Password',ok:'Open 🔓',no:'Not now',bad:'Wrong password, try again 💭',done:'Unlocked! 💕'}; }
+    function norm(v){ return String(v||'').toLowerCase().replace(/[ً-ٟـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[٠-٩]/g,function(c){ return String(c.charCodeAt(0)-1632); }).replace(/[۰-۹]/g,function(c){ return String(c.charCodeAt(0)-1776); }).replace(/\s+/g,''); }
+    function okList(){ var l=[C('gpass')]; if(!cfg.gpass||cfg.gpass===DEFS.en.gpass||cfg.gpass===DEFS.ar.gpass){ l.push(DEFS.en.gpass,DEFS.ar.gpass); } return l.map(norm).filter(Boolean); }
+    window.giftAsk=function(){
+      if(!GIFT.locked||GIFT.opening) return; var g=G(); $('gmT').textContent=g.t; $('gmS').textContent=g.s; IN.placeholder=g.ph; $('gmOk').textContent=g.ok; $('gmNo').textContent=g.no; $('gmH').textContent=C('ghint'); $('gmE').textContent=''; IN.value='';
+      MOD.hidden=false; setTimeout(function(){ try{ IN.focus(); }catch(e){} },60);
+    };
+    function closeAsk(){ MOD.hidden=true; try{ IN.blur(); }catch(e){} }
+    function submit(){
+      var v=norm(IN.value); if(!v) return;
+      if(okList().indexOf(v)>=0){ closeAsk(); giftUnlock(false); }
+      else { tries++; $('gmE').textContent=G().bad; CARD.classList.remove('shake'); void CARD.offsetWidth; CARD.classList.add('shake'); chime([60,56],.12,.14); IN.select(); }
+    }
+    window.giftUnlock=function(fromRemote){
+      if(!GIFT.locked||GIFT.opening) return; GIFT.opening=true; GIFT.k=0; if(!fromRemote){ send({t:'gift'}); } else closeAsk();
+      toast(G().done,2600); chime([76,79,83,88,91],.12,.18); try{ playReal('tada',.35); }catch(e){} burst(120);
+    };
+    window.giftUpdate=function(px,pz){
+      var near=GIFT.locked&&!GIFT.opening&&MOD.hidden&&Math.hypot(px-(FX+1.5),pz-FZ)<3.4; if(near){ BTN.textContent=G().btn; } BTN.hidden=!near;
+    };
+    window.giftTick=function(dt,now){
+      if(!GIFT.grp.visible) return;
+      if(!GIFT.opening){ lock.rotation.z=Math.sin(now*.002)*.045; return; }
+      GIFT.k=Math.min(1,GIFT.k+dt/2.6); var k=GIFT.k, e=Math.min(1,k/.25), f=Math.max(0,(k-.25)/.75), fade=Math.max(0,Math.min(1,(k-.4)/.5));
+      shp.rotation.y=e*1.15; shp.position.y=.21+e*.09;
+      lock.position.y=-.02-f*f*1.7; lock.rotation.z=f*2.4; lock.position.z=.12+f*.3;
+      cg.scale.setScalar(1+fade*.07); GIFT.mats.forEach(function(m){ m.opacity=1-fade; });
+      if(k>=1){ cg.visible=false; GIFT.locked=false; GIFT.opening=false; GIFT.pick.length=0; }
+    };
+    BTN.addEventListener('click',function(){ giftAsk(); });
+    $('gmOk').addEventListener('click',submit); $('gmNo').addEventListener('click',closeAsk);
+    MOD.addEventListener('click',function(e){ if(e.target===MOD) closeAsk(); });
+    ['keydown','keyup'].forEach(function(ev){ IN.addEventListener(ev,function(e){ e.stopPropagation(); if(ev==='keydown'){ if(e.key==='Enter') submit(); else if(e.key==='Escape') closeAsk(); } }); });
+  })();
   /* display cases */
   var glassM=new THREE.MeshStandardMaterial({color:0xdfeeff,transparent:true,opacity:.2,roughness:.05,metalness:.1,depthWrite:false});
   var goldM=new THREE.MeshStandardMaterial({color:0xdcb25c,emissive:0x4a3410,roughness:.3,metalness:.6});
