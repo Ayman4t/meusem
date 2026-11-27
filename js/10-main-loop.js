@@ -1,3 +1,4 @@
+var perfN=0,perfS=0;
 var camDtS;
 /* Main loop, config to scene, loading screen */
 'use strict';
@@ -27,6 +28,11 @@ function clampPlayer(p){
 }
 function frame(now){
   var dt=Math.min(.05,(now-last)/1000); last=now; if(ROLE) netTick(now);
+  /* adaptive resolution: if the phone is struggling, render fewer pixels (never below 1x) */
+  perfN=(perfN||0)+1; perfS=(perfS||0)+dt;
+  if(perfN>=90){ var avg=perfS/perfN; perfN=0; perfS=0;
+    if(avg>.026&&PR>1){ PR=Math.max(1,PR-.25); renderer.setPixelRatio(PR); resize(); }
+    else if(avg<.015&&PR<Math.min(window.devicePixelRatio||1,PR_MAX)-.01){ PR=Math.min(PR+.25,Math.min(window.devicePixelRatio||1,PR_MAX)); renderer.setPixelRatio(PR); resize(); } }
   var moving=false;
   if(state==='explore'){
     camYaw+=(keys.rl-keys.rr)*dt*1.8;

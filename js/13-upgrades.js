@@ -261,7 +261,7 @@ function drawFeature(){
     var plaqueText=new THREE.Mesh(new THREE.PlaneGeometry(.85,.14),new THREE.MeshBasicMaterial({map:canvasTex(plaqueCv)}));
     plaqueText.position.set(0,.27,1.076); sculpture.add(plaqueText);
     var floorRing=new THREE.Mesh(new THREE.TorusGeometry(1.42,.018,8,72),gold); floorRing.rotation.x=Math.PI/2; floorRing.position.y=.025; sculpture.add(floorRing);
-    var spot=new THREE.SpotLight(0xffe2c8,3.2,9,Math.PI/5,.62,1); spot.position.set(0,4.7,ZC+1.7); spot.target.position.set(0,1.2,ZC); scene.add(spot); scene.add(spot.target);
+    var spot=new THREE.SpotLight(0xffe2c8,1.5,10,Math.PI/4,1,1); spot.position.set(0,4.7,ZC+1.7); spot.target.position.set(0,1.2,ZC); scene.add(spot); scene.add(spot.target);
     COLL.push({x0:-1.84,x1:1.84,z0:ZC-1.84,z1:ZC+1.84});
   })();
 })();

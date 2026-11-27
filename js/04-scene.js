@@ -5,7 +5,7 @@
 var NO3D=!window.THREE;
 if(NO3D) $('pct').textContent='3D engine failed to load. Check your connection and reload.';
 var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+var PR_MAX=(('ontouchstart' in window)||navigator.maxTouchPoints>0)?1.5:2, PR=Math.min(window.devicePixelRatio||1,PR_MAX); renderer.setPixelRatio(PR);
 var scene=new THREE.Scene();
 scene.background=new THREE.Color(0x1a0d14);
 scene.fog=new THREE.Fog(0x1a0d14,30,95);
