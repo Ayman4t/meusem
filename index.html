@@ -417,7 +417,8 @@ body{background:#1a0d14}
 </style>
 <style id="darkEntry">
 /* Dark entrance */
-#darkVeil{position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;display:none}
+#darkVeil{display:none}
+.tag.dkHide{opacity:0!important}
 #darkMsg{position:absolute;left:0;right:0;top:17%;z-index:21;text-align:center;pointer-events:none;font-family:var(--serif);font-style:italic;font-size:clamp(24px,5.4vw,40px);color:#fff1ea;text-shadow:0 0 24px rgba(255,170,140,.7),0 2px 12px rgba(0,0,0,.8);opacity:0;transform:translateY(8px);transition:opacity 1s ease,transform 1.2s ease;padding:0 20px}
 #darkMsg.show{opacity:1;transform:none}
 #darkHearts{position:absolute;left:50%;top:max(16px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:21;display:flex;gap:7px;pointer-events:none;font-size:17px;color:rgba(255,255,255,.28)}
@@ -783,7 +784,7 @@ function playVoice(key){ var u=mediaURL(key); if(!u) return; songEl.pause(); voi
 function startSong(){ var u=mediaURL('song'); if(!u) return; if(songEl.getAttribute('data-k')!==u){ songEl.src=u; songEl.setAttribute('data-k',u); } songEl.muted=muted; songEl.play().catch(function(){}); setDuck(.2); }
 function stopSong(){ songEl.pause(); if(voiceEl.paused) setDuck(1); }
 function setMuted(m){ muted=m; if(AC) musicBus.gain.setTargetAtTime(.5*duck*(m?0:1),AC.currentTime,.08); songEl.muted=m; }
-function setSfxMuted(m){ sfxMuted=m; if(sfxBus) sfxBus.gain.setTargetAtTime(m?0:.9,AC?AC.currentTime:0,.04); if(onlineSfx&&onlineSfx.muted) onlineSfx.muted(m); voiceEl.muted=m; }
+function setSfxMuted(m){ sfxMuted=m; if(sfxBus) sfxBus.gain.setTargetAtTime(m?0:.9,AC?AC.currentTime:0,.04); if(onlineSfx&&onlineSfx.muted) onlineSfx.muted(m); voiceEl.muted=m; if(typeof fwAudio!=='undefined') fwAudio.muted=m; }
 
 /* ---------- Three.js scene ---------- */
 if(!window.THREE){ $('pct').textContent='3D engine failed to load. Check your connection and reload.'; return; }
@@ -1663,10 +1664,34 @@ function updateMuseumTour(now){
   renderMuseumTour(now);
 }
 
-/* ---------- Dark entrance: one lit painting, lights wake up as she walks ---------- */
-var DK={on:false,t:0,step:0,target:-1,wait:1.2,veil:.985,fade:0,fin:false,finT:0,lit:[],k:[],burst:[],trail:[],lx:null,lz:null,msgT:null,cv:null,vx:null,sent:{}};
+/* ---------- Dark entrance: one lit painting, a cone of light from the roof follows her ---------- */
+var DK={on:false,t:0,step:0,target:-1,wait:1.2,fin:false,finT:0,fadeDur:3,lit:[],k:[],burst:[],trail:[],lx:null,lz:null,msgT:null,shown:false};
 for(var di=0;di<8;di++){ DK.lit[di]=false; DK.k[di]=0; DK.burst[di]=0; }
-var dkV=new THREE.Vector3();
+/* The darkness is done in the shaders of every material, so only what is inside her cone of light
+   (or a lit painting) is drawn; nothing beyond it can be seen. Off (dkS.x=0) outside the dark entrance. */
+var DKU={C:new THREE.Vector3(),R:new THREE.Matrix3(),P:new THREE.Vector4(0,0,0,2.3),S:new THREE.Vector4(0,0,.012,0),A:[],T:[]};
+for(var da=0;da<8;da++) DKU.A.push(new THREE.Vector4(0,0,0,0));
+for(var dt2=0;dt2<10;dt2++) DKU.T.push(new THREE.Vector4(0,0,0,0));
+var DK_FRAG=[
+ 'if(dkS.x>.5){',
+ ' float rr=mix(dkP.w,dkP.w*.2,clamp(vDkW.y/5.0,0.0,1.0));',
+ ' float lit=1.0-smoothstep(rr*.5,rr,length(vDkW.xz-dkP.xz));',
+ ' for(int i=0;i<8;i++){ vec4 a=dkA[i]; if(a.w>.01) lit=max(lit,1.0-smoothstep(a.w*.45,a.w,length(vDkW-a.xyz))); }',
+ ' for(int j=0;j<10;j++){ vec4 q=dkT[j]; if(q.w>.01) lit=max(lit,(1.0-smoothstep(q.w*.3,q.w,length(vDkW-q.xyz)))*.55); }',
+ ' float f=mix(dkS.z,1.0,lit); f=mix(f,1.0,dkS.w); gl_FragColor.rgb*=f;',
+ '}'].join('\n');
+THREE.Material.prototype.onBeforeCompile=function(sh){
+  if(sh.vertexShader.indexOf('#include <fog_vertex>')<0||sh.fragmentShader.indexOf('#include <fog_fragment>')<0) return;
+  sh.uniforms.dkC={value:DKU.C}; sh.uniforms.dkR={value:DKU.R}; sh.uniforms.dkP={value:DKU.P}; sh.uniforms.dkS={value:DKU.S}; sh.uniforms.dkA={value:DKU.A}; sh.uniforms.dkT={value:DKU.T};
+  sh.vertexShader='uniform vec3 dkC;\nuniform mat3 dkR;\nvarying vec3 vDkW;\n'+sh.vertexShader.replace('#include <fog_vertex>','#include <fog_vertex>\nvDkW=dkC+dkR*mvPosition.xyz;');
+  sh.fragmentShader='uniform vec4 dkP;\nuniform vec4 dkS;\nuniform vec4 dkA[8];\nuniform vec4 dkT[10];\nvarying vec3 vDkW;\n'+sh.fragmentShader.replace('#include <fog_fragment>','#include <fog_fragment>\n'+DK_FRAG);
+};
+/* the visible shaft of light from the ceiling lamp down to a circle on the floor */
+var dkBeam=new THREE.Mesh(new THREE.CylinderGeometry(.42,2.15,H,48,1,true),new THREE.MeshBasicMaterial({color:0xffd9b0,transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+dkBeam.visible=false; dkBeam.renderOrder=5; scene.add(dkBeam);
+var dkRing=new THREE.Mesh(new THREE.RingGeometry(1.7,2.2,48),new THREE.MeshBasicMaterial({color:0xffd9b0,transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+dkRing.rotation.x=-Math.PI/2; dkRing.position.y=.03; dkRing.visible=false; scene.add(dkRing);
+
 function dkOn(){ return DK.on; }
 function dkLit(i){ return DK.lit[i]; }
 function dkMsg(text,ms){
@@ -1680,9 +1705,9 @@ function dkHearts(){
 }
 function dkStart(){
   if(DK.on) return true;
-  DK.on=true; DK.t=0; DK.step=0; DK.fin=false; DK.fade=0; DK.veil=.985; DK.wait=1.4; DK.target=-1;
-  DK.cv=$('darkVeil'); DK.vx=DK.cv.getContext('2d'); DK.cv.style.display='block';
+  DK.on=true; DK.t=0; DK.step=0; DK.fin=false; DK.wait=1.4; DK.target=-1;
   document.body.classList.add('dk'); $('darkSkip').hidden=false; $('darkHearts').hidden=false; dkHearts();
+  tags.npc.el.classList.add('dkHide');
   $('darkSkip').textContent=LANG==='ar'?'تخطي ›':'Skip ›';
   setTimeout(function(){ if(DK.on&&!DK.fin) dkMsg(LANG==='ar'?'اتبعي النور ♥':'Follow the light ♥',3600); },2800);
   return true;
@@ -1695,7 +1720,7 @@ function dkFinale(skipped){
   if(DK.fin) return; DK.fin=true; DK.finT=0; DK.target=-1;
   DK.fadeDur=skipped?1.2:3.2;
   for(var i=0;i<8;i++){ DK.lit[i]=true; DK.k[i]=Math.max(DK.k[i],1); }
-  dkHearts();
+  dkHearts(); tags.npc.el.classList.remove('dkHide');
   chime([72,76,79,84,88],.14,.13); playReal('whoosh',.35); if(!skipped) playReal('tada',.3);
   dkMsg(LANG==='ar'?'كل ذكرى منورة عشانك ♥':'Every memory, lit for you ♥',3600);
   var g=function(fn,ms){ setTimeout(function(){ if(state==='explore') fn(); },ms); };
@@ -1707,33 +1732,20 @@ function dkFinale(skipped){
   }
 }
 $('darkSkip').addEventListener('click',function(){ if(DK.on) dkFinale(true); });
-function dkHole(x,W,H,px,py,r,a){
-  var c=DK.vx; if(r<2||a<=.01) return;
-  var g=c.createRadialGradient(px,py,0,px,py,r);
-  g.addColorStop(0,'rgba(0,0,0,'+a+')'); g.addColorStop(.5,'rgba(0,0,0,'+(a*.78)+')'); g.addColorStop(.8,'rgba(0,0,0,'+(a*.28)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
-  c.fillStyle=g; c.beginPath(); c.arc(px,py,r,0,6.2832); c.fill();
-}
-function dkProj(x,y,z,r,W,H){
-  dkV.set(x,y,z).applyMatrix4(camera.matrixWorldInverse); var d=-dkV.z; if(d<.35) return null;
-  var f=(H/2)/Math.tan(camera.fov*Math.PI/360);
-  dkV.set(x,y,z).project(camera); return {x:(dkV.x*.5+.5)*W,y:(-dkV.y*.5+.5)*H,r:r*f/d};
-}
 function dkEnd(){
-  DK.on=false; DK.cv.style.display='none'; document.body.classList.remove('dk'); $('darkSkip').hidden=true; $('darkHearts').hidden=true;
-  refreshTourButton();
+  DK.on=false; DKU.S.x=0; DKU.S.w=0; dkBeam.visible=false; dkRing.visible=false;
+  document.body.classList.remove('dk'); $('darkSkip').hidden=true; $('darkHearts').hidden=true;
+  tags.npc.el.classList.remove('dkHide'); refreshTourButton();
 }
+/* runs every frame just before the scene is drawn */
 function dkTick(dt,now){
   if(!DK.on) return;
   if(state!=='explore'&&!DK.fin) dkFinale(true);
   DK.t+=dt;
-  var st=$('stage'), SW=st.clientWidth||innerWidth, SH=st.clientHeight||innerHeight, sc=.5, w=Math.round(SW*sc), h=Math.round(SH*sc);
-  if(DK.cv.width!==w||DK.cv.height!==h){ DK.cv.width=w; DK.cv.height=h; }
   var pp=player.position;
 
   if(!DK.fin){
-    /* walking leaves a fading trail of light */
-    if(DK.lx===null||Math.hypot(pp.x-DK.lx,pp.z-DK.lz)>.55){ DK.trail.push({x:pp.x,z:pp.z,a:1}); DK.lx=pp.x; DK.lz=pp.z; }
-    /* wake the next painting */
+    if(DK.lx===null||Math.hypot(pp.x-DK.lx,pp.z-DK.lz)>.9){ DK.trail.push({x:pp.x,z:pp.z,a:1}); DK.lx=pp.x; DK.lz=pp.z; if(DK.trail.length>10) DK.trail.shift(); }
     if(DK.target<0&&DK.step<8){ DK.wait-=dt; if(DK.wait<=0) dkNext(); }
     if(DK.target>=0){
       var f=frames[DK.target];
@@ -1746,53 +1758,25 @@ function dkTick(dt,now){
       }
     }
   } else {
-    DK.finT+=dt; DK.veil=Math.max(0,.985*(1-Math.pow(Math.min(1,DK.finT/DK.fadeDur),1.4)));
-    if(DK.veil<=.002){ dkEnd(); return; }
+    DK.finT+=dt;
+    DKU.S.w=ease(DK.finT/DK.fadeDur);
+    if(DK.finT>=DK.fadeDur){ dkEnd(); return; }
   }
   for(var i=0;i<8;i++) if(DK.burst[i]>0) DK.burst[i]=Math.max(0,DK.burst[i]-dt/1.5);
-  for(var q=DK.trail.length-1;q>=0;q--){ DK.trail[q].a-=dt/6; if(DK.trail[q].a<=0) DK.trail.splice(q,1); }
+  for(var q=DK.trail.length-1;q>=0;q--){ DK.trail[q].a-=dt/3; if(DK.trail[q].a<=0) DK.trail.splice(q,1); }
 
-  var c=DK.vx; c.globalCompositeOperation='source-over'; c.clearRect(0,0,w,h);
-  c.fillStyle='rgba(3,1,6,'+DK.veil+')'; c.fillRect(0,0,w,h);
-  c.globalCompositeOperation='destination-out';
-  var pr, pulse=.92+.08*Math.sin(now*.003);
-  /* her own small pool of light */
-  pr=dkProj(pp.x,.9,pp.z,1.7,w,h); if(pr) dkHole(0,w,h,pr.x,pr.y,pr.r,.8);
-  pr=dkProj(pp.x,0,pp.z,2.3,w,h); if(pr) dkHole(0,w,h,pr.x,pr.y,pr.r,.4);
-  DK.trail.forEach(function(p){ var r2=dkProj(p.x,0,p.z,1.4,w,h); if(r2) dkHole(0,w,h,r2.x,r2.y,r2.r,.4*p.a); });
-  /* a spotlight falling from the roof onto her, every step */
-  var top=dkProj(pp.x,H,pp.z,.25,w,h), bot=dkProj(pp.x,0,pp.z,1.9,w,h);
-  if(top&&bot){
-    var cone=function(fill,widen){
-      c.fillStyle=fill; c.beginPath();
-      c.moveTo(top.x-top.r*widen,top.y); c.lineTo(top.x+top.r*widen,top.y);
-      c.lineTo(bot.x+bot.r*widen,bot.y); c.lineTo(bot.x-bot.r*widen,bot.y); c.closePath(); c.fill();
-    };
-    var cg=c.createLinearGradient(0,top.y,0,bot.y); cg.addColorStop(0,'rgba(0,0,0,.42)'); cg.addColorStop(1,'rgba(0,0,0,.24)');
-    [1.12,.95,.78,.6,.42].forEach(function(wd){ cone(cg,wd); });
-    /* ceiling lamp spot */
-    dkHole(0,w,h,top.x,top.y,Math.max(8,top.r*5),.9);
-  }
-  /* paintings */
+  /* hand everything to the shaders */
+  camera.updateMatrixWorld(); DKU.C.setFromMatrixPosition(camera.matrixWorld); DKU.R.setFromMatrix4(camera.matrixWorld);
+  DKU.S.x=1; DKU.P.set(pp.x,0,pp.z,2.3);
   for(var n=0;n<8;n++){
-    var k=DK.lit[n]?1:DK.k[n]; if(k<=.01) continue;
-    var fr=frames[n], side=fr.x<0?1:-1, b=DK.burst[n], r0=3.4*(1+.45*b);
-    var a=Math.min(1,k*(DK.lit[n]?1:pulse));
-    pr=dkProj(fr.x+side*.9,2.1,fr.z,r0,w,h); if(pr) dkHole(0,w,h,pr.x,pr.y,pr.r,a);
-    pr=dkProj(fr.x+side*1.9,0,fr.z,2.7*(1+.3*b),w,h); if(pr) dkHole(0,w,h,pr.x,pr.y,pr.r,.7*k);
+    var fr=frames[n], side=fr.x<0?1:-1, k=DK.lit[n]?1:DK.k[n]*(.94+.06*Math.sin(now*.003));
+    DKU.A[n].set(fr.x+side*.9,2.1,fr.z,3.7*k*(1+.45*DK.burst[n]));
   }
-  /* warm tint inside the lit areas */
-  c.globalCompositeOperation='source-over';
-  if(top&&bot&&!DK.fin){
-    var bg=c.createLinearGradient(0,top.y,0,bot.y); bg.addColorStop(0,'rgba(255,214,170,.14)'); bg.addColorStop(1,'rgba(255,214,170,.03)');
-    c.fillStyle=bg; [1.05,.8,.55].forEach(function(wd){ c.beginPath(); c.moveTo(top.x-top.r*wd,top.y); c.lineTo(top.x+top.r*wd,top.y); c.lineTo(bot.x+bot.r*wd,bot.y); c.lineTo(bot.x-bot.r*wd,bot.y); c.closePath(); c.fill(); });
-  }
-  for(var m=0;m<8;m++){
-    var kk=DK.lit[m]?1:DK.k[m]; if(kk<=.01||DK.fin) continue;
-    var fm=frames[m], sd=fm.x<0?1:-1; pr=dkProj(fm.x+sd*.9,2.1,fm.z,3.4,w,h); if(!pr) continue;
-    var gg=c.createRadialGradient(pr.x,pr.y,0,pr.x,pr.y,pr.r); gg.addColorStop(0,'rgba(255,200,150,'+(.16*kk)+')'); gg.addColorStop(1,'rgba(255,200,150,0)');
-    c.fillStyle=gg; c.beginPath(); c.arc(pr.x,pr.y,pr.r,0,6.2832); c.fill();
-  }
+  for(var m=0;m<10;m++){ var tp=DK.trail[m]; if(tp) DKU.T[m].set(tp.x,0,tp.z,1.5*tp.a); else DKU.T[m].w=0; }
+  var bw=1-DKU.S.w;
+  dkBeam.visible=dkRing.visible=bw>.02; dkBeam.position.set(pp.x,H/2,pp.z); dkRing.position.x=pp.x; dkRing.position.z=pp.z;
+  dkBeam.material.opacity=.1*bw; dkRing.material.opacity=(.14+.03*Math.sin(now*.004))*bw;
+  scene.background.multiplyScalar(DKU.S.w); scene.fog.color.multiplyScalar(DKU.S.w);
 }
 
 /* music toggle */
@@ -2035,7 +2019,7 @@ function fwLaunch(w,h){ var d=window.devicePixelRatio||1; fwR.push({x:(.12+.76*M
 function fwTick(){
   var w=fwc.width, h=fwc.height, now=performance.now();
   fwx.clearRect(0,0,w,h); fwx.globalCompositeOperation='lighter'; fwx.lineCap='round';
-  if(fwOn&&now-fwStartAt>45000) fwOn=false;
+  if(fwOn&&now-fwStartAt>45000){ fwOn=false; fwSoundOff(); }
   if(fwOn&&now>fwNext){ fwLaunch(w,h); if(Math.random()<.4) setTimeout(function(){ if(fwOn) fwLaunch(fwc.width,fwc.height); },180); fwNext=now+(reduceMotion?1300:420+Math.random()*420); }
   fwR=fwR.filter(function(r){
     var sp=Math.max(4*r.d,(r.y-r.ty)*.055); r.y-=sp;
@@ -2049,7 +2033,10 @@ function fwTick(){
   });
   if(fwOn||fwP.length||fwR.length) requestAnimationFrame(fwTick); else { fwRun=false; fwx.clearRect(0,0,w,h); }
 }
-function fwStart(){ unlockOnlineSfx(); try{ if(typeof initAudio==='function') initAudio(); if(AC&&AC.state==='suspended') AC.resume(); }catch(e){} if(fwOn) return; fwOn=true; fwStartAt=performance.now(); fwNext=fwStartAt+500; if(!fwRun){ fwRun=true; requestAnimationFrame(fwTick); } }
+var fwAudio=new Audio('sounds/fireworks.mp3?v=1'); fwAudio.loop=true; fwAudio.preload='auto'; fwAudio.volume=.7;
+function fwSoundOn(){ try{ fwAudio.muted=sfxMuted; fwAudio.currentTime=0; var pr=fwAudio.play(); if(pr&&pr.catch) pr.catch(function(){}); setDuck(.35); }catch(e){} }
+function fwSoundOff(){ try{ fwAudio.pause(); setDuck(1); }catch(e){} }
+function fwStart(){ unlockOnlineSfx(); try{ if(typeof initAudio==='function') initAudio(); if(AC&&AC.state==='suspended') AC.resume(); }catch(e){} if(fwOn) return; fwOn=true; fwSoundOn(); fwStartAt=performance.now(); fwNext=fwStartAt+500; if(!fwRun){ fwRun=true; requestAnimationFrame(fwTick); } }
 
 function burst(n){
   if(reduceMotion) n=Math.round(n/3);
@@ -2243,9 +2230,9 @@ function frame(now){
   camera.position.copy(camPos); camera.lookAt(camLook);
   if(Math.abs(camera.fov-fovT)>.02){ camera.fov+=(fovT-camera.fov)*Math.min(1,dt*2.5); camera.updateProjectionMatrix(); }
 
+  dkTick(dt,now);
   renderer.render(scene,camera);
   if(recX){ recX.drawImage(canvas,0,0,recC.width,recC.height); overlayText(recX,recC.width,recC.height); }
-  dkTick(dt,now);
   placeOverlays();
   requestAnimationFrame(frame);
 }
