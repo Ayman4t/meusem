@@ -1,0 +1,12 @@
+/* Clean prompt near a painting: only the Open button, no card */
+#capPill{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;gap:8px!important;flex-wrap:nowrap!important;justify-content:center!important}
+#capPill #capText{display:none!important}
+#capPill button{min-height:44px!important;padding:11px 24px!important;font-size:16px!important;font-weight:700!important;box-shadow:0 6px 20px rgba(0,0,0,.4)!important}
+#capPill #capOpen{background:linear-gradient(135deg,#fff3f0,#ffc2cf)!important;color:#5a1a2c!important}
+#capPill #capBtn,#capPill #capListen{background:rgba(255,255,255,.92)!important;color:#5a1a2c!important}
+/* Light, clear icon buttons: React, sound effects, music, music picker */
+#soundControls .tool.icon,#soundControls #emotes .em-main{background:rgba(255,247,249,.94)!important;border:1px solid #fff!important;color:#5a1a2c!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;font-size:16px!important;opacity:1!important}
+#soundControls #emotes .em-main svg{width:16px;height:16px;color:#e0405f;fill:#e0405f}
+#soundControls .tool.icon:active,#soundControls #emotes .em-main:active{transform:scale(.94)}
+#askMini{position:absolute;z-index:60;inset-inline-end:max(12px,env(safe-area-inset-right,0px));top:calc(max(12px,env(safe-area-inset-top,0px)) + 52px);display:flex;gap:8px;pointer-events:auto}
+#askMini .tool.icon{width:34px;height:34px;min-height:34px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(255,247,249,.94)!important;border:1px solid #fff!important;color:#5a1a2c!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;opacity:1!important;cursor:pointer}

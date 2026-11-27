@@ -1,0 +1,13 @@
+/* mute state: same icon, red slash, so music / effects / track picker are all different */
+.tool.icon{position:relative}
+.tool.icon.off{filter:grayscale(.6)}
+.tool.icon.off::after{content:"";position:absolute;left:18%;right:18%;top:calc(50% - 1px);height:2.5px;border-radius:2px;background:#d6284a;box-shadow:0 0 0 1px rgba(255,255,255,.85);transform:rotate(-45deg);pointer-events:none}
+#musicPanel button.mo .mo-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:start;opacity:.72;font-size:12px}
+/* emoji tray: 14 reactions = 7 x 2, balanced */
+#emotes .tray{grid-template-columns:repeat(7,minmax(0,1fr))!important;width:min(344px,calc(100vw - 24px));gap:5px!important;padding:8px!important;box-sizing:border-box}
+#emotes .tray button{width:auto!important;height:auto!important;aspect-ratio:1;min-width:0;font-size:22px!important}
+#emotes .tray button:disabled{opacity:.6}
+#emotes .tray .em-note{grid-column:1/-1;font-size:12px;line-height:1.4;text-align:center;color:#ffd6df;padding:2px 4px 0}
+#emotes .tray .em-note[hidden]{display:none}
+/* hint never sits on the joystick */
+@media (pointer:coarse){#hint{bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 40px + 140px);max-width:calc(100% - 32px);white-space:normal}}
