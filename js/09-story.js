@@ -47,7 +47,7 @@ function drawLetterScreen(n){
   var x=screenCanvas.getContext('2d'), w=1400, h=780, ar=LANG==='ar';
   x.drawImage(loveBg(),0,0); loveDivider(x,w/2,78,260);
   x.direction=ar?'rtl':'ltr'; x.textBaseline='alphabetic'; x.textAlign=ar?'right':'left'; x.fillStyle='#fff1ee'; x.font=letLay.font; x.shadowColor='rgba(255,110,150,.5)'; x.shadowBlur=14;
-  var cy=146+Math.max(0,(540-letLay.tot)/2), left=n;
+  var cy=146-34+Math.max(0,(540-letLay.tot)/2), left=n;
   letLay.lines.forEach(function(l){
     cy+=l.h; if(!l.t||left<=0){ left-=l.t.length; return; }
     var shown=l.t.slice(0,left); left-=l.t.length; x.fillText(shown, ar?(w+l.w)/2:(w-l.w)/2, cy);

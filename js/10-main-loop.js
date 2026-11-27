@@ -106,14 +106,7 @@ function frame(now){
     h.material.opacity=heartsK*.8*Math.min(1,(3.4-d.y)/1.2)*Math.min(1,d.y/.6);
   });
   if(window.giftTick) giftTick(dt,now);
-  if(letterOn!==avHid){ avHid=letterOn; player.visible=npc.visible=true;
-    if(letterOn){ window._letSave={p:player.position.clone(),n:npc.position.clone(),pr:player.rotation.y,nr:npc.rotation.y}; }
-    else if(window._letSave){ var ls=window._letSave; player.position.copy(ls.p); npc.position.copy(ls.n); player.rotation.y=ls.pr; npc.rotation.y=ls.nr; window._letSave=null; } }
-  if(letterOn){ /* characters stand beside the letter board, facing the viewer */
-    var lyz=ZB+1.3; player.position.set(-5.7,player.position.y,lyz); npc.position.set(5.7,npc.position.y,lyz);
-    player.rotation.y=lerpAngle(player.rotation.y,.38,1-Math.exp(-dt*6)); npc.rotation.y=lerpAngle(npc.rotation.y,-.38,1-Math.exp(-dt*6));
-    pose(player,false,dt); pose(npc,false,dt);
-  }
+  if(letterOn!==avHid){ avHid=letterOn; player.visible=npc.visible=true; } /* characters stay exactly where they are */
   updateLights(dt,now); fxUpdate(dt,now,moving); if(state==='explore') clampPlayer(npc.position);
   var rs0=(ROLE==='host'&&linked&&state==='explore'&&!ringBusy); if(rs0!==ringShown){ ringShown=rs0; $('tRing').hidden=!rs0; }
 
