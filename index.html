@@ -281,7 +281,7 @@ button:active:not(:disabled){transform:scale(.97)}
 #emotes button:hover{background:rgba(60,40,56,.85);transform:scale(1.08)}
 #liveChat{width:min(280px,46vw)}
 #lcIn{min-height:40px;background:var(--glass)}
-.bubble span{border-radius:20px 20px 20px 6px;box-shadow:0 8px 26px rgba(0,0,0,.32),0 0 0 1px rgba(0,0,0,.04)}
+.bubble{transform-origin:50% 100%}.bubble span{max-width:min(190px,56vw);padding:6px 11px;font-size:13px;line-height:1.25;background:rgba(255,255,255,.86);border-radius:16px 16px 16px 5px;box-shadow:0 8px 26px rgba(0,0,0,.32),0 0 0 1px rgba(0,0,0,.04)}
 .tag span{background:var(--glass);border:1px solid var(--glass-b);backdrop-filter:blur(6px);font-weight:600}
 #toast{background:rgba(255,248,244,.97);box-shadow:0 10px 30px rgba(0,0,0,.35);border:1px solid rgba(217,63,90,.25)}
 #exitBtn{border:1px solid var(--glass-b);min-height:40px}
@@ -1553,12 +1553,13 @@ function placeOverlays(){
   }
   Object.keys(tags).forEach(function(k){
     var tg=tags[k]; if(letterOn){ tg.el.style.visibility='hidden'; if(tg.bubble) tg.bubble.style.visibility='hidden'; return; }
-    function put(el,yOff){
+    function put(el,yOff,isB){
+      var dd=camera.position.distanceTo(tg.av.position), bs=isB?Math.max(.55,Math.min(1,5.5/Math.max(dd,.1))):1;
       tmpV.set(tg.av.position.x,tg.av.position.y+yOff,tg.av.position.z).project(camera);
       if(tmpV.z>1||tmpV.z<-1||Math.abs(tmpV.x)>1.2){ el.style.visibility='hidden'; return; }
-      el.style.visibility='visible'; el.style.transform='translate('+((tmpV.x*.5+.5)*w).toFixed(1)+'px,'+((-tmpV.y*.5+.5)*h).toFixed(1)+'px) translate(-50%,-100%)';
+      el.style.visibility='visible'; el.style.transform='translate('+((tmpV.x*.5+.5)*w).toFixed(1)+'px,'+((-tmpV.y*.5+.5)*h).toFixed(1)+'px) translate(-50%,-100%)'+(isB?' scale('+bs.toFixed(2)+')':'');
     }
-    var hs=tg.av.userData.sc/.82; put(tg.el,2.05*hs); if(tg.bubble) put(tg.bubble,2.5*hs);
+    var hs=tg.av.userData.sc/.82; put(tg.el,2.05*hs); if(tg.bubble) put(tg.bubble,2.3*hs,true);
   });
 }
 
@@ -3364,7 +3365,7 @@ var planeBusy=false;
 function launchPlane(){
   var host=$('loveFlight'); if(!host||planeBusy||!gardenOn) return; planeBusy=true;
   var el=document.createElement('div'); el.className='fl';
-  var cloth=document.createElement('div'); cloth.className='cloth'; cloth.textContent=LANG==='ar'?'بحبك \u2665':'I love you \u2665';
+  var cloth=document.createElement('div'); cloth.className='cloth'; cloth.textContent=(LANG==='ar'?'بحبك ':'I love you ')+C('to')+' \u2665';
   var rope=document.createElement('div'); rope.className='rope';
   var pl=document.createElement('div'); pl.innerHTML=PLANE_SVG; pl.style.display='flex';
   el.appendChild(cloth); el.appendChild(rope); el.appendChild(pl); host.appendChild(el);
