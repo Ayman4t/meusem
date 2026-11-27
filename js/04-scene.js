@@ -114,7 +114,7 @@ var stripMat=new THREE.MeshBasicMaterial({color:0xfff1dc});
       lf.position.copy(tip).add(d.clone().multiplyScalar(leafLen/2*.92)); lf.quaternion.setFromUnitVectors(UP,d); lf.rotateY(Math.random()*Math.PI); g.add(lf);
     }
     g.position.set(x,0,z); g.rotation.y=Math.random()*6.28; g.scale.setScalar(sc||1); scene.add(g); blob(1.4*(sc||1),1.4*(sc||1),x,z,.3); }
-  [8.2,-7.5,-20.5,-31,-39.5].forEach(function(z,i){ plant(-(W/2-1.1),z,1+(i%2)*.18); plant(W/2-1.1,z,1.12-(i%2)*.14); });
+  [8.2,-7.5,-14.2,-34.5,-39.5].forEach(function(z,i){ plant(-(W/2-1.1),z,1+(i%2)*.18); plant(W/2-1.1,z,1.12-(i%2)*.14); });
   /* shadows under the benches */
   [-3,-12,-21,-30].forEach(function(z){ [-1,1].forEach(function(sd){ blob(1.7,4.4,sd*9.8,z,.3); }); });
   /* ceiling: coffer beams + warm cove glow along the walls */
