@@ -175,6 +175,6 @@ $('langBtn').addEventListener('click',function(){ setLang(LANG==='ar'?'en':'ar')
 /* ---------- Loading screen ---------- */
 var progress=0, loaded=false;
 if(IS_GIFT||JOIN) $('customize').hidden=true;
-applyI18n(); if(!NO3D) $('pct').textContent=t('prep')+'0%';
+applyI18n(); if(!NO3D) $('pct').textContent=t('prep')+'0%'; document.documentElement.classList.remove('pre');
 $('enter').addEventListener('click',function(){ if(state!=='intro') return; if(!MUSEUM_MODE&&!IS_GIFT&&!ROLE&&!JOIN){ location.href='museum.html'; return; } startExplore(); });
 

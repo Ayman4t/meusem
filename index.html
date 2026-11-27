@@ -4,8 +4,16 @@
 <script>/* set language + direction before first paint, keep the ticket hidden until texts are ready (no English flash) */
 (function(){var d=document.documentElement,l='en';try{var x=localStorage.getItem('ourMuseum.lang');if(x==='ar'||x==='en')l=x;}catch(e){}
 var m=/^#m=/.test(location.hash);if(!m){d.lang=l;d.dir=l==='ar'?'rtl':'ltr';}
-d.classList.add('pre');setTimeout(function(){d.classList.remove('pre');},3000);})();</script>
-<style>html.pre #intro,html.pre #intro *{opacity:0!important;transition:none!important}</style>
+setTimeout(function(){var p=document.getElementById('preload');if(p)p.classList.add('gone');},4500);})();</script>
+<style>
+#preload{position:fixed;inset:0;z-index:99999;background:#1a0d14;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;pointer-events:all}
+#preload.gone{opacity:0;pointer-events:none}
+#preload .pb{width:min(220px,50vw);height:4px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden}
+#preload .pb b{display:block;height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#ff7d96,#d93f5a);animation:pbRun 1.1s ease-in-out infinite}
+@keyframes pbRun{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+html[lang=ar] .tk-en,html[lang=ar] .tk-dot{display:none}
+html[lang=en] .tk-ar,html[lang=en] .tk-dot{display:none}
+</style>
 <meta name="description" content="I made you a whole museum 🥹 — a private invitation, just for you. · عملتلك متحف كامل، دعوة خاصة ليكي 💌">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Museum of Love 💌">
@@ -31,6 +39,7 @@ d.classList.add('pre');setTimeout(function(){d.classList.remove('pre');},3000);}
 <link rel="stylesheet" href="css/10-gift.css">
 </head>
 <body>
+<div id="preload" aria-hidden="true"><div class="pb"><b></b></div></div>
 
 <div id="stage">
   <canvas id="gl"></canvas>

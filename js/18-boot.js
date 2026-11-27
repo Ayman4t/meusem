@@ -6,9 +6,17 @@ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function(){ g
 
 (function(){
   var loader=IS_GIFT?Promise.resolve({}):idbLoadAll();
-  loader.then(function(all){ Object.keys(all).forEach(function(k){ store[k]=all[k]; }); return applyCfg(); }).then(function(){ loaded=true; applyI18n(); document.documentElement.classList.remove('pre'); }).catch(function(){ loaded=true; document.documentElement.classList.remove('pre'); });
+  loader.then(function(all){ Object.keys(all).forEach(function(k){ store[k]=all[k]; }); return applyCfg(); }).then(function(){ loaded=true; }).catch(function(){ loaded=true; });
 })();
 
+/* keep only a small loading bar on screen until texts, fonts and photos are ready, then reveal the finished ticket */
+(function(){
+  var t1=performance.now(), fontsP=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  var iv=setInterval(function(){ if(!loaded) return; clearInterval(iv); fontsP.then(function(){
+    applyI18n(); var wait=Math.max(0,500-(performance.now()-t1));
+    setTimeout(function(){ var pl=document.getElementById('preload'); if(pl){ pl.classList.add('gone'); setTimeout(function(){ if(pl.parentNode) pl.parentNode.removeChild(pl); },600); } },wait);
+  }); },40);
+})();
 var t0=performance.now();
 var museumStarted=false;
 var loadTimer=setInterval(function(){
