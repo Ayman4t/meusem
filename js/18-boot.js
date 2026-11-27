@@ -6,7 +6,7 @@ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function(){ g
 
 (function(){
   var loader=IS_GIFT?Promise.resolve({}):idbLoadAll();
-  loader.then(function(all){ Object.keys(all).forEach(function(k){ store[k]=all[k]; }); return applyCfg(); }).then(function(){ loaded=true; }).catch(function(){ loaded=true; });
+  loader.then(function(all){ Object.keys(all).forEach(function(k){ store[k]=all[k]; }); return applyCfg(); }).then(function(){ loaded=true; applyI18n(); document.documentElement.classList.remove('pre'); }).catch(function(){ loaded=true; document.documentElement.classList.remove('pre'); });
 })();
 
 var t0=performance.now();
