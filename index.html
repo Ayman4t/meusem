@@ -1,6 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Museum of Love</title>
+<meta name="description" content="I made you a whole museum 🥹 — a private invitation, just for you. · عملتلك متحف كامل، دعوة خاصة ليكي 💌">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Museum of Love 💌">
+<meta property="og:description" content="I made you a whole museum 🥹 — a private invitation, just for you. · عملتلك متحف كامل، دعوة خاصة ليكي">
+<meta property="og:image" content="https://YOUR-DOMAIN.com/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:url" content="https://YOUR-DOMAIN.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Museum of Love 💌">
+<meta name="twitter:image" content="https://YOUR-DOMAIN.com/og.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -441,6 +451,20 @@ body{background:#1a0d14}
 @keyframes dkSkipIn{to{opacity:1}}
 body.dk #tools,body.dk #mapBox,body.dk .brand{opacity:0;pointer-events:none}
 #tools,#mapBox,.brand{transition:opacity 1.6s ease}
+<style id="fixes2">
+/* mute state: same icon, red slash, so music / effects / track picker are all different */
+.tool.icon{position:relative}
+.tool.icon.off{filter:grayscale(.6)}
+.tool.icon.off::after{content:"";position:absolute;left:18%;right:18%;top:calc(50% - 1px);height:2.5px;border-radius:2px;background:#d6284a;box-shadow:0 0 0 1px rgba(255,255,255,.85);transform:rotate(-45deg);pointer-events:none}
+#musicPanel button.mo .mo-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:start;opacity:.72;font-size:12px}
+/* emoji tray: 14 reactions = 7 x 2, balanced */
+#emotes .tray{grid-template-columns:repeat(7,minmax(0,1fr))!important;width:min(344px,calc(100vw - 24px));gap:5px!important;padding:8px!important;box-sizing:border-box}
+#emotes .tray button{width:auto!important;height:auto!important;aspect-ratio:1;min-width:0;font-size:22px!important}
+#emotes .tray button:disabled{opacity:.6}
+#emotes .tray .em-note{grid-column:1/-1;font-size:12px;line-height:1.4;text-align:center;color:#ffd6df;padding:2px 4px 0}
+#emotes .tray .em-note[hidden]{display:none}
+/* hint never sits on the joystick */
+@media (pointer:coarse){#hint{bottom:calc(max(22px,env(safe-area-inset-bottom,0px)) + 40px + 140px);max-width:calc(100% - 32px);white-space:normal}}
 </style>
 </head>
 <body>
@@ -511,7 +535,7 @@ body.dk #tools,body.dk #mapBox,body.dk .brand{opacity:0;pointer-events:none}
       <span class="no-slot" id="noSlot"></span>
       <button class="no" id="no"></button>
     </div>
-    <div id="askMini"><button type="button" id="amSfx" class="tool icon"></button><button type="button" id="amMusic" class="tool icon"></button><button type="button" id="amTrack" class="tool icon">🎶</button></div>
+    <div id="askMini"><button type="button" id="amSfx" class="tool icon"></button><button type="button" id="amMusic" class="tool icon"></button><button type="button" id="amTrack" class="tool icon">🎼</button></div>
     <div id="askTools" hidden>
       <button class="ghost sm" id="askSfx" type="button"></button>
       <button class="ghost sm" id="askShot"></button>
@@ -834,8 +858,8 @@ function canvasTex(c){ var tx=new THREE.CanvasTexture(c); tx.anisotropy=4; retur
 
 var wallMat=new THREE.MeshStandardMaterial({color:0xe6cdcf,roughness:1});
 var wallMat2=new THREE.MeshStandardMaterial({color:0xe6cdcf,roughness:1,side:THREE.DoubleSide});
-var ceilTex=(function(){ var c=document.createElement('canvas'); c.width=c.height=256; var x=c.getContext('2d'); x.fillStyle='#2b1620'; x.fillRect(0,0,256,256); x.fillStyle='#08080a'; x.fillRect(0,0,256,7); x.fillRect(0,0,7,256); x.fillStyle='rgba(255,255,255,.03)'; x.fillRect(9,9,238,238); var t=canvasTex(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(W/1.8,L/1.8); return t; })();
-var ceil=new THREE.Mesh(new THREE.PlaneGeometry(W,L),new THREE.MeshStandardMaterial({map:ceilTex,color:0xffffff,roughness:1}));
+var ceilTex=(function(){ var c=document.createElement('canvas'); c.width=c.height=256; var x=c.getContext('2d'); x.fillStyle='#86606b'; x.fillRect(0,0,256,256); x.fillStyle='#3a272e'; x.fillRect(0,0,256,7); x.fillRect(0,0,7,256); x.fillStyle='rgba(255,255,255,.06)'; x.fillRect(9,9,238,238); var t=canvasTex(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(W/1.8,L/1.8); return t; })();
+var ceil=new THREE.Mesh(new THREE.PlaneGeometry(W,L),new THREE.MeshStandardMaterial({map:ceilTex,color:0xffffff,roughness:1,emissive:0x2c1a21}));
 ceil.rotation.x=Math.PI/2; ceil.position.set(0,H,ZC); scene.add(ceil);
 /* left wall has a doorway to the secret room */
 (function(){
@@ -868,6 +892,43 @@ var stripMat=new THREE.MeshBasicMaterial({color:0xfff1dc});
   /* doorway trim */
   var gm=new THREE.MeshStandardMaterial({color:0xd8d4cc,roughness:.8});
   box(.3,.22,2.8,-W/2+.1,3.7,DOORZ,gm); box(.3,3.6,.2,-W/2+.1,1.8,DOORZ-1.3,gm); box(.3,3.6,.2,-W/2+.1,1.8,DOORZ+1.3,gm);
+})();
+
+/* ---- hall details: runner rug, soft floor patches, plants, ceiling beams, cove glow, blob shadows ---- */
+(function(){
+  function blob(w,d,x,z,a){ var c=document.createElement('canvas'); c.width=c.height=64; var q=c.getContext('2d'), g=q.createRadialGradient(32,32,2,32,32,32); g.addColorStop(0,'rgba(0,0,0,'+a+')'); g.addColorStop(1,'rgba(0,0,0,0)'); q.fillStyle=g; q.fillRect(0,0,64,64);
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({map:canvasTex(c),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2})); m.rotation.x=-Math.PI/2; m.position.set(x,.02,z); scene.add(m); return m; }
+  /* soft warm / cool patches so the tile pattern stops repeating */
+  (function(){ var c=document.createElement('canvas'); c.width=512; c.height=1024; var q=c.getContext('2d');
+    for(var i=0;i<46;i++){ var x=Math.random()*512,y=Math.random()*1024,r=50+Math.random()*130,g=q.createRadialGradient(x,y,0,x,y,r),warm=Math.random()<.5; g.addColorStop(0,warm?'rgba(255,214,190,.20)':'rgba(120,90,110,.16)'); g.addColorStop(1,'rgba(0,0,0,0)'); q.fillStyle=g; q.fillRect(x-r,y-r,r*2,r*2); }
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(W,L),new THREE.MeshBasicMaterial({map:canvasTex(c),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1})); m.rotation.x=-Math.PI/2; m.position.set(0,.006,ZC); scene.add(m); })();
+  /* runner rug down the middle of the hall */
+  (function(){ var RW=3.4, RL=ZF-3-(ZB+10);
+    var tx=gTex(256,1024,function(x,w,h){
+      x.fillStyle='#7d2c43'; x.fillRect(0,0,w,h);
+      x.strokeStyle='#e0b36a'; x.lineWidth=10; x.strokeRect(10,10,w-20,h-20); x.lineWidth=3; x.strokeRect(30,30,w-60,h-60);
+      x.fillStyle='rgba(255,220,190,.16)'; for(var y=70;y<h-60;y+=96){ x.save(); x.translate(w/2,y); x.rotate(Math.PI/4); x.fillRect(-26,-26,52,52); x.restore(); x.fillStyle='rgba(224,179,106,.5)'; x.beginPath(); x.arc(w/2,y,7,0,7); x.fill(); x.fillStyle='rgba(255,220,190,.16)'; }
+      for(var n=0;n<1400;n++){ x.fillStyle='rgba(255,255,255,'+Math.random()*.05+')'; x.fillRect(Math.random()*w,Math.random()*h,1,3); }
+    });
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(RW,RL),new THREE.MeshStandardMaterial({map:tx,roughness:.95})); m.rotation.x=-Math.PI/2; m.position.set(0,.014,(ZF-3+ZB+10)/2); scene.add(m);
+    blob(RW+.7,RL+.7,0,m.position.z,.28); })();
+  /* potted plants along both walls */
+  var potM=new THREE.MeshStandardMaterial({color:0xb5654a,roughness:.8}), soilM=new THREE.MeshStandardMaterial({color:0x2a1c16,roughness:1});
+  var leafA=new THREE.MeshStandardMaterial({color:0x3f7a4e,roughness:.8}), leafB=new THREE.MeshStandardMaterial({color:0x5c9a63,roughness:.8});
+  function plant(x,z,sc){ var g=new THREE.Group();
+    var pot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.25,.6,16),potM); pot.position.y=.3; g.add(pot);
+    var rim=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,20),potM); rim.rotation.x=Math.PI/2; rim.position.y=.6; g.add(rim);
+    var soil=new THREE.Mesh(new THREE.CircleGeometry(.32,16),soilM); soil.rotation.x=-Math.PI/2; soil.position.y=.6; g.add(soil);
+    for(var i=0;i<11;i++){ var a=i/11*Math.PI*2+Math.random()*.4, h=.9+Math.random()*.9, lf=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),i%2?leafA:leafB); lf.scale.set(.55,1.5+Math.random()*.9,.28); lf.position.set(Math.cos(a)*.2,.6+h*.55,Math.sin(a)*.2); lf.rotation.set(Math.sin(a)*.5,-a,-Math.cos(a)*.5); g.add(lf); }
+    g.position.set(x,0,z); g.scale.setScalar(sc||1); scene.add(g); blob(1.4*(sc||1),1.4*(sc||1),x,z,.3); }
+  [8.2,-7.5,-20.5,-31,-39.5].forEach(function(z,i){ plant(-(W/2-1.1),z,1+(i%2)*.18); plant(W/2-1.1,z,1.12-(i%2)*.14); });
+  /* shadows under the benches */
+  [-3,-12,-21,-30].forEach(function(z){ [-1,1].forEach(function(sd){ blob(1.7,4.4,sd*9.8,z,.3); }); });
+  /* ceiling: coffer beams + warm cove glow along the walls */
+  var beamM=new THREE.MeshStandardMaterial({color:0x4a3238,roughness:.7});
+  for(var z=ZF-3;z>ZB+2;z-=6){ var b=new THREE.Mesh(new THREE.BoxGeometry(W,.16,.34),beamM); b.position.set(0,H-.1,z); scene.add(b); }
+  var cove=new THREE.MeshBasicMaterial({color:0xffcf9f,transparent:true,opacity:.75,fog:false});
+  [-1,1].forEach(function(sd){ var c=new THREE.Mesh(new THREE.BoxGeometry(.1,.06,L-.6),cove); c.position.set(sd*(W/2-.5),H-.36,ZC); scene.add(c); });
 })();
 
 /* ---------- TV on the wall + exit door ---------- */
@@ -1801,9 +1862,9 @@ $('tourStop').addEventListener('click',function(){ if(museumTour.active){ finish
 function refreshExtra(){
   var ar=LANG==='ar';
   if($('askSfx')){ $('askSfx').textContent=(sfxMuted?'\uD83D\uDD07 ':'\uD83D\uDD0A ')+(ar?'\u0627\u0644\u0645\u0624\u062b\u0631\u0627\u062a \u0627\u0644\u0635\u0648\u062a\u064a\u0629':'Sound effects'); $('askSfx').setAttribute('aria-pressed',String(!sfxMuted)); }
-  if($('amMusic')){ $('amMusic').textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; $('amSfx').textContent=sfxMuted?'\uD83D\uDD07':'\uD83D\uDD0A'; }
-  tMusic.textContent=muted?'\uD83D\uDD07':'\uD83C\uDFB5'; tMusic.title=tMusic.ariaLabel=muted?(ar?'تشغيل الموسيقى':'Turn music on'):(ar?'إيقاف الموسيقى':'Turn music off');
-  tSfx.textContent=sfxMuted?'\uD83D\uDD07':'\uD83D\uDD0A'; tSfx.title=tSfx.ariaLabel=sfxMuted?(ar?'تشغيل أصوات المتحف':'Turn museum sounds on'):(ar?'إيقاف أصوات المتحف':'Turn museum sounds off');
+  if($('amMusic')){ $('amMusic').textContent='\uD83C\uDFB5'; $('amSfx').textContent='\uD83D\uDD0A'; $('amMusic').classList.toggle('off',muted); $('amSfx').classList.toggle('off',sfxMuted); $('amMusic').title=$('amMusic').ariaLabel=ar?'الموسيقى':'Music'; $('amSfx').title=$('amSfx').ariaLabel=ar?'المؤثرات':'Sound effects'; }
+  tMusic.textContent='\uD83C\uDFB5'; tMusic.classList.toggle('off',muted); tMusic.title=tMusic.ariaLabel=muted?(ar?'تشغيل الموسيقى':'Turn music on'):(ar?'إيقاف الموسيقى':'Turn music off');
+  tSfx.textContent='\uD83D\uDD0A'; tSfx.classList.toggle('off',sfxMuted); tSfx.title=tSfx.ariaLabel=sfxMuted?(ar?'تشغيل أصوات المتحف':'Turn museum sounds on'):(ar?'إيقاف أصوات المتحف':'Turn museum sounds off');
   tLook.textContent='\uD83D\uDC57 '+(ar?'تخصيص الشخصيات':'Customize');
   if(MUSEUM_MODE){ if(!tHome){ tHome=document.createElement('button'); tHome.className='tool'; tHome.id='tHome'; tHome.addEventListener('click',function(){ window.top.location.href=new URL('index.html',location.href).href; }); $('tools').insertBefore(tHome,$('tools').firstChild); } tHome.textContent=ar?'← الإعداد':'← Intro'; }
   refreshTourButton(); if(museumTour.active||museumTour.complete) renderMuseumTour(performance.now());
@@ -1922,7 +1983,7 @@ function updateCine(dt){
 }
 
 /* ---------- Letter, then the question ---------- */
-var letterOn=false, letTimer=null, letLay=null, letN=0, letKey='letter', letPage=0;
+var avHid=false, letterOn=false, letTimer=null, letLay=null, letN=0, letKey='letter', letPage=0;
 function wrapLines(x,text,maxW){ var words=String(text).split(/\s+/), line='', out=[]; words.forEach(function(w){ var tt=line?line+' '+w:w; if(x.measureText(tt).width>maxW&&line){ out.push(line); line=w; } else line=tt; }); out.push(line); return out; }
 function letMaxW(){ return stage.clientWidth/stage.clientHeight<1?860:1180; }
 function layoutLetter(){
@@ -2220,6 +2281,7 @@ function frame(now){
     d.y+=d.v*dt; if(d.y>3.4) d.y=.4; h.position.set(d.bx+Math.sin(now*.001+d.ph)*.25,d.y,d.bz);
     h.material.opacity=heartsK*.8*Math.min(1,(3.4-d.y)/1.2)*Math.min(1,d.y/.6);
   });
+  if(letterOn!==avHid){ avHid=letterOn; player.visible=npc.visible=!letterOn; }
   updateLights(dt,now); fxUpdate(dt,now,moving); if(state==='explore') clampPlayer(npc.position);
   var rs0=(ROLE==='host'&&linked&&state==='explore'&&!ringBusy); if(rs0!==ringShown){ ringShown=rs0; $('tRing').hidden=!rs0; }
 
@@ -2733,7 +2795,7 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
 (function(){
   var row=document.getElementById('soundControls'); if(!row) return;
   var AR=function(){ return typeof LANG!=='undefined'&&LANG==='ar'; };
-  var btn=document.createElement('button'); btn.className='tool icon'; btn.id='tTrack'; btn.type='button'; btn.textContent='\uD83C\uDFB6'; btn.setAttribute('aria-expanded','false');
+  var btn=document.createElement('button'); btn.className='tool icon'; btn.id='tTrack'; btn.type='button'; btn.textContent='\uD83C\uDFBC'; btn.title=btn.ariaLabel=(typeof LANG!=='undefined'&&LANG==='ar')?'اختيار الموسيقى':'Choose music'; btn.setAttribute('aria-expanded','false');
   row.appendChild(btn);
   var panel=document.createElement('div'); panel.id='musicPanel'; panel.hidden=true; document.body.appendChild(panel);
   var st=document.createElement('style'); st.textContent='#musicPanel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);inset-inline-end:12px;width:min(290px,calc(100vw - 24px));padding:12px;border-radius:18px;background:rgba(34,16,28,.95);border:1px solid rgba(255,170,190,.3);box-shadow:0 14px 36px rgba(0,0,0,.5);color:#f6dfe5;font-size:13px;z-index:400;pointer-events:auto;backdrop-filter:blur(10px)}#musicPanel[hidden]{display:none!important}#musicPanel h4{margin:0 0 8px;font-size:14px;font-weight:700}#musicPanel button.mo{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 6px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;font:inherit;text-align:start;cursor:pointer}#musicPanel button.mo.on{background:linear-gradient(135deg,#ff9fb5,#ffc2cf);color:#4a1424;border-color:transparent;font-weight:700}#musicPanel .mo-up{background:rgba(255,255,255,.1)!important;justify-content:center}#musicPanel small{display:block;opacity:.7;line-height:1.35;margin-top:4px}#musicPanel .mo-del{background:none;border:0;color:#ffb3bf;font:inherit;padding:2px 0;cursor:pointer;text-decoration:underline}';
@@ -2755,7 +2817,7 @@ var emEl=document.createElement('div'); emEl.id='emotes'; emEl.hidden=true; stag
   function render(){
     var ar=AR(), h='<h4>\uD83C\uDFB5 '+(ar?'\u0627\u062e\u062a\u0631 \u0645\u0648\u0633\u064a\u0642\u0627\u0643':'Choose your music')+'</h4>';
     Object.keys(MOODS).forEach(function(k){ h+='<button type="button" class="mo'+(curMood===k?' on':'')+'" data-m="'+k+'">'+(curMood===k?'\u2713 ':'\u266A ')+(ar?MOODS[k].ar:MOODS[k].en)+'</button>'; });
-    if(customURL) h+='<button type="button" class="mo'+(curMood==='custom'?' on':'')+'" data-m="custom">'+(curMood==='custom'?'\u2713 ':'\uD83D\uDCC1 ')+(ar?'\u0645\u0648\u0633\u064a\u0642\u0627\u064a: ':'My music: ')+(customName||'')+'</button>';
+    if(customURL) h+='<button type="button" class="mo'+(curMood==='custom'?' on':'')+'" data-m="custom"><span>'+(curMood==='custom'?'\u2713 ':'\uD83D\uDCC1 ')+(ar?'\u0645\u0648\u0633\u064a\u0642\u0627\u064a':'My music')+'</span><bdi class="mo-n" dir="ltr" title="'+String(customName||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];})+'">'+String(customName||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];})+'</bdi></button>';
     h+='<button type="button" class="mo mo-up" id="moUp">\u2B06 '+(ar?'\u0627\u0631\u0641\u0639 \u0645\u0644\u0641 \u0645\u0648\u0633\u064a\u0642\u0649 \u062e\u0627\u0635':'Upload my own music file')+'</button>';
     if(customURL) h+='<button type="button" class="mo-del" id="moDel">'+(ar?'\u062d\u0630\u0641 \u0645\u0644\u0641\u064a':'Remove my file')+'</button>';
     h+='<small>'+(ar?'\u0627\u0644\u0645\u0644\u0641 \u064a\u0628\u0642\u0649 \u0639\u0644\u0649 \u062c\u0647\u0627\u0632\u0643 \u0641\u0642\u0637 (\u0644\u0627 \u064a\u064f\u0631\u0641\u0639 \u0644\u0623\u064a \u0645\u0643\u0627\u0646). \u0627\u062e\u062a\u0631 \u0623\u063a\u0646\u064a\u062a\u0643 \u0627\u0644\u0645\u0641\u0636\u0644\u0629 \u0645\u0646 \u062c\u0647\u0627\u0632\u0643.':'Your file stays on this device only and is never uploaded. Pick any favorite song you own.')+'</small>';
@@ -2829,7 +2891,9 @@ var emMain=document.createElement('button'); emMain.className='em-main'; emMain.
 var rbtn={};
 REACTS.forEach(function(n){ var bt=document.createElement('button'); bt.addEventListener('click',function(){ doReact(n); tray.hidden=true; emMain.setAttribute('aria-expanded','false'); }); tray.appendChild(bt); rbtn[n]=bt; });
 function flowerNear(){ return Math.hypot(player.position.x-npc.position.x,player.position.z-npc.position.z)<=2.25; }
-function updateFlowerAvailability(){ var b=rbtn.flower, L=RLAB[LANG]||RLAB.en, near=flowerNear(); b.disabled=!near; b.title=b.ariaLabel=near?L.flower:L.flowerWait; }
+var flNote=document.createElement('div'); flNote.className='em-note'; tray.appendChild(flNote);
+function updateFlowerAvailability(){ var b=rbtn.flower, L=RLAB[LANG]||RLAB.en, near=flowerNear(); b.disabled=!near; b.title=b.ariaLabel=near?L.flower:L.flowerWait; flNote.hidden=near; flNote.textContent='\uD83C\uDF38 '+(LANG==='ar'?'الوردة بتشتغل لما تقرّبوا من بعض':'The flower works when you stand close together'); }
+setInterval(updateFlowerAvailability,400);
 window.emRefresh=function(){ var L=RLAB[LANG]||RLAB.en; REACTS.forEach(function(n){ rbtn[n].textContent=REMO[n]; rbtn[n].title=rbtn[n].ariaLabel=L[n]; }); updateFlowerAvailability(); emMain.innerHTML='<svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56C14 42 6 32 6 21 6 13 12 8 19 8c5 0 10 3 13 8 3-5 8-8 13-8 7 0 13 5 13 13 0 11-8 21-26 35z" fill="#ff7d96"/></svg>'; emMain.setAttribute('aria-label',L.main); };
 emRefresh();
 emMain.addEventListener('click',function(){ tray.hidden=!tray.hidden; emMain.setAttribute('aria-expanded',String(!tray.hidden)); });
@@ -3223,9 +3287,11 @@ function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,no
     var pool=mesh(new THREE.PlaneGeometry(3.2,2.2),ADD(new THREE.MeshBasicMaterial({map:halo,opacity:.35})),side*(W/2-1.4),.014,sl.z); pool.rotation.x=-Math.PI/2;
   });
   /* ---- room name above the two hall doors that had no sign ---- */
+  function bigSignTex(en,ar,col){ return gTex(1024,336,function(x,w,h){ x.fillStyle='#1b1519'; x.fillRect(0,0,w,h); x.strokeStyle=col; x.lineWidth=8; x.strokeRect(12,12,w-24,h-24); x.textAlign='center'; x.fillStyle='#fff3f0'; x.font='700 112px Inter,"IBM Plex Sans Arabic",sans-serif'; x.fillText(en,w/2,150,w-80); x.fillStyle=col; x.font='600 86px "IBM Plex Sans Arabic",Inter,sans-serif'; x.fillText(ar,w/2,268,w-80); }); }
+  window.bigSignTex=bigSignTex;
   function nameSign(side,en,ar,col){
-    var tx=gTex(512,128,function(x,w,h){ x.fillStyle='#1b1519'; x.fillRect(0,0,w,h); x.strokeStyle=col; x.lineWidth=5; x.strokeRect(8,8,w-16,h-16); x.fillStyle='#fff3f0'; x.textAlign='center'; x.font='600 40px Inter,"IBM Plex Sans Arabic",sans-serif'; x.fillText(en+'  ·  '+ar,w/2,78,w-40); });
-    var m=new THREE.Mesh(new THREE.PlaneGeometry(2.8,.7),new THREE.MeshBasicMaterial({map:tx})); m.position.set(side*(W/2-.05),4.25,DOORZ); m.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(m);
+    var tx=bigSignTex(en,ar,col);
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(3.6,1.18),new THREE.MeshBasicMaterial({map:tx})); m.position.set(side*(W/2-.05),4.2,DOORZ); m.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(m);
   }
   nameSign(-1,'SECRET ROOM','الأوضة السرية','#ff8fa8');
   nameSign(1,'CINEMA ROOM','أوضة العرض','#8a90ff');
@@ -3289,8 +3355,8 @@ var drCv=$('drCv'), drCx=drCv.getContext('2d');
     return {cx:cx,far:far,ry:ry};
   }
   function sign(side,key,col){
-    var tx=gTex(512,128,function(x,w,h){ x.fillStyle='#1b1519'; x.fillRect(0,0,w,h); x.strokeStyle=col; x.lineWidth=5; x.strokeRect(8,8,w-16,h-16); x.fillStyle='#fff3f0'; x.textAlign='center'; x.font='600 40px Inter,"IBM Plex Sans Arabic",sans-serif'; x.fillText(RMT.en[key]+'  ·  '+RMT.ar[key],w/2,78,w-40); });
-    pl(2.8,.7,new THREE.MeshBasicMaterial({map:tx}),side*(W/2-.05),4.25,DOORZ2,0,side<0?Math.PI/2:-Math.PI/2);
+    var tx=window.bigSignTex(RMT.en[key],RMT.ar[key],col);
+    pl(3.6,1.18,new THREE.MeshBasicMaterial({map:tx}),side*(W/2-.05),4.2,DOORZ2,0,side<0?Math.PI/2:-Math.PI/2);
   }
   var dark=new THREE.MeshStandardMaterial({color:0x2a2228,roughness:.6});
   /* ---------- PHOTO BOOTH (west) ---------- */
