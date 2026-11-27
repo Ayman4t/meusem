@@ -131,7 +131,7 @@ function frame(now){
 
   dkTick(dt,now);
   renderer.render(scene,camera);
-  if(recX){ recX.drawImage(canvas,0,0,recC.width,recC.height); overlayText(recX,recC.width,recC.height); }
+  if(recX){ recX.drawImage(canvas,0,0,recC.width,recC.height); drawOverlays(recX,recC.width,recC.height); overlayText(recX,recC.width,recC.height); }
   placeOverlays();
   requestAnimationFrame(frame);
 }

@@ -203,9 +203,32 @@ function overlayText(x,w,h){
   var g=x.createLinearGradient(0,h*.78,0,h); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.6)'); x.fillStyle=g; x.fillRect(0,h*.78,w,h*.22);
   x.fillStyle='#f4f0ea'; x.textAlign='center'; x.font='italic 500 '+Math.round(h*.045)+'px "Playfair Display","IBM Plex Sans Arabic",Georgia,serif'; x.fillText(C('from')+'  ♥  '+C('to'),w/2,h*.93);
 }
+/* Fireworks, confetti and the love plane are separate page layers on top of the 3D canvas, so they are copied onto saved pictures / recordings by hand. */
+function drawPlaneOn(x,fl,st,sx,sy){
+  var cl=fl.querySelector('.cloth'), rp=fl.querySelector('.rope'), sv=fl.querySelector('svg');
+  x.save();
+  if(cl){
+    var r=cl.getBoundingClientRect(), cs=getComputedStyle(cl), W=cl.offsetWidth*sx, H=cl.offsetHeight*sy, cx=(r.left+r.width/2-st.left)*sx, cy=(r.top+r.height/2-st.top)*sy;
+    var notch=Math.min(W*.14,18*sx), pl=parseFloat(cs.paddingLeft)*sx, pr=parseFloat(cs.paddingRight)*sx;
+    x.shadowColor='rgba(90,20,40,.3)'; x.shadowBlur=10*sx; x.shadowOffsetY=5*sx;
+    var g=x.createLinearGradient(cx-W/2,cy-H/2,cx+W/2,cy+H/2); g.addColorStop(0,'#fffaf6'); g.addColorStop(.7,'#ffd3de'); g.addColorStop(1,'#ffb9ca');
+    x.fillStyle=g; x.beginPath(); x.moveTo(cx-W/2,cy-H/2); x.lineTo(cx+W/2,cy-H/2); x.lineTo(cx+W/2,cy+H/2); x.lineTo(cx-W/2,cy+H/2); x.lineTo(cx-W/2+notch,cy); x.closePath(); x.fill();
+    x.shadowColor='transparent'; x.fillStyle='#c2284a'; x.textAlign='center'; x.textBaseline='middle'; x.direction='ltr';
+    x.font=cs.fontStyle+' '+cs.fontWeight+' '+(parseFloat(cs.fontSize)*sx)+'px '+cs.fontFamily;
+    x.fillText(cl.textContent,cx-W/2+pl+(W-pl-pr)/2,cy+H*.03);
+  }
+  if(rp){ var q=rp.getBoundingClientRect(); x.fillStyle='rgba(255,246,240,.9)'; x.fillRect((q.left-st.left)*sx,(q.top+q.height/2-st.top)*sy-sy,q.width*sx,2*sy); }
+  if(sv&&typeof PLANE_IMG!=='undefined'&&PLANE_IMG.complete){ var v=sv.getBoundingClientRect(); x.shadowColor='rgba(90,20,40,.3)'; x.shadowBlur=10*sx; x.shadowOffsetY=5*sx; x.drawImage(PLANE_IMG,(v.left-st.left)*sx,(v.top-st.top)*sy,v.width*sx,v.height*sy); }
+  x.restore();
+}
+function drawOverlays(x,w,h){
+  var st=stage.getBoundingClientRect(), sx=w/st.width, sy=h/st.height;
+  ['fw','confetti'].forEach(function(id){ var cv=$(id); if(cv&&cv.width&&cv.height) x.drawImage(cv,0,0,w,h); });
+  var fl=document.querySelector('#loveFlight .fl'); if(fl) drawPlaneOn(x,fl,st,sx,sy);
+}
 function shot(){
   renderer.render(scene,camera);
-  var c=document.createElement('canvas'); c.width=canvas.width; c.height=canvas.height; var x=c.getContext('2d'); x.drawImage(canvas,0,0); overlayText(x,c.width,c.height);
+  var c=document.createElement('canvas'); c.width=canvas.width; c.height=canvas.height; var x=c.getContext('2d'); x.drawImage(canvas,0,0); drawOverlays(x,c.width,c.height); overlayText(x,c.width,c.height);
   c.toBlob(function(b){ if(b){ download(b,'our-moment.png'); toast(t('saved')); } },'image/png');
 }
 var rec=null, recC=null, recX=null, recTimer=null;

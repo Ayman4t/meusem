@@ -103,6 +103,7 @@ function enterGarden(){ if(gardenOn) return; gardenOn=true; document.body.classL
 
 /* ---------- A little plane pulling an "I love you" banner across the sunset sky ---------- */
 var PLANE_SVG='<svg viewBox="0 0 124 62" aria-hidden="true"><path d="M2 30 L14 30" stroke="#fff6f0" stroke-width="2"/><polygon points="14,31 26,9 36,9 33,31" fill="#ff8da5"/><ellipse cx="66" cy="35" rx="44" ry="13" fill="#fff6f0"/><path d="M22 35 Q66 20 108 33 L108 38 Q66 50 22 40Z" fill="#ffe3ea" opacity=".9"/><path d="M96 25 Q112 26 110 36 Q108 44 96 45Z" fill="#e8506b"/><rect x="44" y="26" width="30" height="3" rx="1.5" fill="#e8506b"/><ellipse cx="82" cy="29" rx="9" ry="6" fill="#bfe3ff" stroke="#fff" stroke-width="1.5"/><path d="M52 37 L78 37 L92 54 L62 54Z" fill="#ff8da5"/><path d="M50 30 L74 30 L66 12 L52 12Z" fill="#ffb3c4" opacity=".85"/><g class="prop"><ellipse cx="108" cy="34" rx="2.6" ry="15" fill="#c2284a" opacity=".85"/></g><circle cx="108" cy="34" r="3.2" fill="#ffd6df"/></svg>';
+var PLANE_IMG=new Image(); PLANE_IMG.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(PLANE_SVG.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" width="124" height="62" ')); /* used to paint the plane into saved pictures */
 var planeBusy=false;
 function launchPlane(){
   var host=$('loveFlight'); if(!host||planeBusy||!gardenOn) return; planeBusy=true;
