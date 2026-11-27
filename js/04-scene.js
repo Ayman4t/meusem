@@ -91,7 +91,7 @@ var stripMat=new THREE.MeshBasicMaterial({color:0xfff1dc});
       x.fillStyle='rgba(255,220,190,.16)'; for(var y=70;y<h-60;y+=96){ x.save(); x.translate(w/2,y); x.rotate(Math.PI/4); x.fillRect(-26,-26,52,52); x.restore(); x.fillStyle='rgba(224,179,106,.5)'; x.beginPath(); x.arc(w/2,y,7,0,7); x.fill(); x.fillStyle='rgba(255,220,190,.16)'; }
       for(var n=0;n<1400;n++){ x.fillStyle='rgba(255,255,255,'+Math.random()*.05+')'; x.fillRect(Math.random()*w,Math.random()*h,1,3); }
     });
-    var m=new THREE.Mesh(new THREE.PlaneGeometry(RW,RL),new THREE.MeshStandardMaterial({map:tx,roughness:.95})); m.rotation.x=-Math.PI/2; m.position.set(0,.014,(ZF-3+ZB+10)/2); m.visible=false; scene.add(m);  /* hidden: the wider rug in 13-upgrades covers it and the two flickered */
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(RW,RL),new THREE.MeshStandardMaterial({map:tx,roughness:.95})); m.rotation.x=-Math.PI/2; m.position.set(0,.032,(ZF-3+ZB+10)/2); m.material.polygonOffset=true; m.material.polygonOffsetFactor=-4; m.material.polygonOffsetUnits=-4; scene.add(m);  /* sits clearly above the wider rug (1.4 cm) so the two never flicker */
     blob(RW+.7,RL+.7,0,m.position.z,.28); })();
   /* potted plants along both walls */
   var potM=new THREE.MeshStandardMaterial({color:0xb5654a,roughness:.8}), soilM=new THREE.MeshStandardMaterial({color:0x2a1c16,roughness:1});
