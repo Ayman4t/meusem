@@ -3,10 +3,10 @@
 
 /* ===== ROOF LIGHTS, PAINTING SPOTLIGHTS, ROOM NAMES ===== */
 (function(){
-  var ADD=function(m){ m.transparent=true; m.blending=THREE.AdditiveBlending; m.depthWrite=false; return m; };
+  var ADD=function(m){ m.transparent=true; m.blending=THREE.AdditiveBlending; m.depthWrite=false; m.polygonOffset=true; m.polygonOffsetFactor=-2; m.polygonOffsetUnits=-4; return m; };
   var halo=gTex(128,128,function(x,w,h){ var g=x.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2); g.addColorStop(0,'rgba(255,228,190,1)'); g.addColorStop(.35,'rgba(255,210,170,.45)'); g.addColorStop(1,'rgba(255,200,160,0)'); x.fillStyle=g; x.fillRect(0,0,w,h); });
   var headM=new THREE.MeshStandardMaterial({color:0x151215,roughness:.4,metalness:.5});
-  var warm=new THREE.MeshBasicMaterial({color:0xfff0d6});
+  var warm=new THREE.MeshBasicMaterial({color:0xfff0d6,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
   function mesh(g,m,x,y,z){ var o=new THREE.Mesh(g,m); o.position.set(x,y,z); scene.add(o); return o; }
   /* ---- roof: glowing cove strips along both sides + recessed round lights down the middle ---- */
   [-1,1].forEach(function(sd){

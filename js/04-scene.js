@@ -9,7 +9,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
 var scene=new THREE.Scene();
 scene.background=new THREE.Color(0x1a0d14);
 scene.fog=new THREE.Fog(0x1a0d14,30,95);
-var camera=new THREE.PerspectiveCamera(58,1,0.1,120), baseFov=58;
+var camera=new THREE.PerspectiveCamera(58,1,0.4,110), baseFov=58;
 
 var W=26,H=5,ZF=10,ZB=-42,L=ZF-ZB,ZC=(ZF+ZB)/2;
 var DOORZ=-16.5, DOORZ2=-25.5, ROOM={x0:-21,x1:-13,z0:-19.5,z1:-13.5,h:4};
