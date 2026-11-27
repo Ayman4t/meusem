@@ -1,3 +1,4 @@
+var camDtS;
 /* Main loop, config to scene, loading screen */
 'use strict';
 
@@ -120,12 +121,12 @@ function frame(now){
     else { wantPos.set(3.4+Math.sin(now*.0004)*.25,1.2,-36.55+Math.cos(now*.0003)*.18); wantLook.set(0,1.12,-36.65); }
   } else {
     var cp=Math.cos(camPitch), px=player.position.x, pz2=player.position.z, cx=px+Math.sin(camYaw)*cp*camDist, cy=1.4+Math.sin(camPitch)*camDist, cz=pz2+Math.cos(camYaw)*cp*camDist;
-    if(px<-W/2-.3){ wantPos.set(clampN(cx,-20.5,-13.7),clampN(cy,.5,3.4),camRZ(cz,pz2)); }
-    else if(px>W/2+.3){ wantPos.set(clampN(cx,13.7,20.5),clampN(cy,.5,3.4),camRZ(cz,pz2)); }
-    else wantPos.set(clampN(cx,-(W/2-.5),W/2-.5),clampN(cy,.5,H-.6),clampN(cz,-41.4,ZF-.4));
+    if(px<-W/2-.3){ wantPos.set(clampN(cx,-20.5,-13.7),clampN(cy,.5,3.2),camRZ(cz,pz2)); }
+    else if(px>W/2+.3){ wantPos.set(clampN(cx,13.7,20.5),clampN(cy,.5,3.2),camRZ(cz,pz2)); }
+    else wantPos.set(clampN(cx,-(W/2-.5),W/2-.5),clampN(cy,.5,H-1.5),clampN(cz,-41.4,ZF-.4));
     wantLook.set(px-Math.sin(camYaw)*2,1.3,pz2-Math.cos(camYaw)*2);
   }
-  var k=1-Math.exp(-dt*(state==='explore'?8:((hug.on||hostYes)?5:2.4))); camPos.lerp(wantPos,k); camLook.lerp(wantLook,k);
+  camDtS=(typeof camDtS==='number'?camDtS:dt)*.85+dt*.15; var k=1-Math.exp(-camDtS*(state==='explore'?8:((hug.on||hostYes)?5:2.4))); camPos.lerp(wantPos,k); camLook.lerp(wantLook,k);
   camera.position.copy(camPos); camera.lookAt(camLook);
   if(Math.abs(camera.fov-fovT)>.02){ camera.fov+=(fovT-camera.fov)*Math.min(1,dt*2.5); camera.updateProjectionMatrix(); }
 
