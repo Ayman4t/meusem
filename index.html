@@ -398,6 +398,8 @@ body{background:#1a0d14}
 .ticket #invite .r{display:flex;align-items:center;gap:8px;width:100%;direction:ltr}
 .ticket #invLink{flex:1 1 auto;min-width:0;height:42px;padding:0 14px;border-radius:999px;font-size:12.5px;text-overflow:ellipsis;background:#fff;border:1px solid rgba(217,63,90,.35)!important;color:#5a3a44!important;box-sizing:border-box}
 .ticket #invCopy{flex:0 0 auto;width:auto;height:42px;min-height:42px;padding:0 16px;border-radius:999px;white-space:nowrap;font-size:13px;font-weight:700;color:#fff!important;background:linear-gradient(135deg,#e8506b,#a82a43)!important;border:0!important;box-shadow:0 6px 16px rgba(217,63,90,.3)}
+.dkToggle{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;font-weight:600;color:#6b3346;cursor:pointer;user-select:none}
+.dkToggle input{width:18px;height:18px;accent-color:#c2284a}
 .ticket #invSt{text-align:center;font-size:13px;color:#8a5a68}
 .ticket #invNote{text-align:center;font-size:12.5px;line-height:1.6;margin:0;color:#8a5a68;padding-top:8px;border-top:1px dashed rgba(217,63,90,.25)}
 </style>
@@ -417,6 +419,15 @@ body{background:#1a0d14}
 </style>
 <style id="darkEntry">
 /* Dark entrance */
+#loveFlight{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:49;direction:ltr}
+#loveFlight .fl{position:absolute;left:0;top:clamp(54px,12%,120px);display:flex;align-items:center;white-space:nowrap;will-change:transform;filter:drop-shadow(0 6px 10px rgba(90,20,40,.28))}
+#loveFlight .cloth{position:relative;padding:clamp(7px,1.4vw,12px) clamp(16px,3vw,28px) clamp(7px,1.4vw,12px) clamp(24px,4vw,40px);background:linear-gradient(135deg,#fffaf6,#ffd3de 70%,#ffb9ca);border-radius:4px 10px 10px 4px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,clamp(10px,2vw,18px) 50%);font-family:var(--serif);font-style:italic;font-weight:600;font-size:clamp(20px,4.6vw,38px);line-height:1.1;color:#c2284a;letter-spacing:.02em;transform-origin:100% 50%;animation:flWave 1.3s ease-in-out infinite}
+#loveFlight .rope{width:clamp(26px,5vw,48px);height:2px;background:#fff6f0;opacity:.9}
+#loveFlight svg{width:clamp(78px,15vw,132px);height:auto;flex:none;overflow:visible}
+#loveFlight .prop{transform-origin:104px 34px;animation:flProp .12s linear infinite}
+@keyframes flWave{0%,100%{transform:skewY(-2.5deg) scaleX(1)}50%{transform:skewY(2.5deg) scaleX(.98)}}
+@keyframes flProp{0%{transform:scaleY(1)}50%{transform:scaleY(.25)}100%{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){#loveFlight .cloth,#loveFlight .prop{animation:none}}
 #darkVeil{display:none}
 .tag.dkHide{opacity:0!important}
 #darkMsg{position:absolute;left:0;right:0;top:17%;z-index:21;text-align:center;pointer-events:none;font-family:var(--serif);font-style:italic;font-size:clamp(24px,5.4vw,40px);color:#fff1ea;text-shadow:0 0 24px rgba(255,170,140,.7),0 2px 12px rgba(0,0,0,.8);opacity:0;transform:translateY(8px);transition:opacity 1s ease,transform 1.2s ease;padding:0 20px}
@@ -437,7 +448,7 @@ body.dk #tools,body.dk #mapBox,body.dk .brand{opacity:0;pointer-events:none}
 <div id="stage">
   <canvas id="gl"></canvas>
   <canvas id="darkVeil"></canvas>
-  <div id="darkMsg" aria-live="polite"></div><div id="darkHearts" hidden></div><button id="darkSkip" hidden type="button"></button>
+  <div id="loveFlight" aria-hidden="true"></div><div id="darkMsg" aria-live="polite"></div><div id="darkHearts" hidden></div><button id="darkSkip" hidden type="button"></button>
   <div id="bubbles"></div>
 
   <div id="hud" hidden>
@@ -477,7 +488,7 @@ body.dk #tools,body.dk #mapBox,body.dk .brand{opacity:0;pointer-events:none}
       <button class="ghost" id="customize" data-i="customize"></button>
       <button class="ghost" id="inviteBtn"></button>
     </div>
-    <div id="invite" hidden><div class="r"><input id="invLink" type="text" readonly><button class="ghost sm" id="invCopy"></button></div><div class="pct" id="invSt"></div><p class="note" id="invNote"></p></div>
+    <div id="invite" hidden><label class="dkToggle"><input type="checkbox" id="invDark" checked><span id="invDarkTxt"></span></label><div class="r"><input id="invLink" type="text" readonly><button class="ghost sm" id="invCopy"></button></div><div class="pct" id="invSt"></div><p class="note" id="invNote"></p></div>
     </div></div>
   </section>
 
@@ -622,6 +633,7 @@ function mergeCfg(c,s){
 }
 var STORE_KEY='ourMuseum.v1', HASH=null, ROLE=null, JOIN=null, MUSEUM_MODE=new URLSearchParams(location.search).get('museum')==='1';
 if(/^#m=/.test(location.hash)){ try{ HASH=JSON.parse(b64dec(location.hash.slice(3).split('&')[0])); }catch(e){ HASH=null; } }
+var DARK_INV=/[#&]dark=1(?:&|$)/.test(location.hash);
 (function(){ var m=/[#&]join=([\w-]+)\.([0-9a-f]+)/.exec(location.hash); if(m){ JOIN={id:m[1],tok:m[2]}; ROLE='guest'; } })();
 var GIFT=!!(PRESET||HASH);
 var LANG='en';
@@ -1707,7 +1719,7 @@ function dkStart(){
   if(DK.on) return true;
   DK.on=true; DK.t=0; DK.step=0; DK.fin=false; DK.wait=1.4; DK.target=-1;
   document.body.classList.add('dk'); $('darkSkip').hidden=false; $('darkHearts').hidden=false; dkHearts();
-  tags.npc.el.classList.add('dkHide');
+  tags.npc.el.classList.add('dkHide'); if(ROLE==='guest') send({t:'dk',v:1});
   $('darkSkip').textContent=LANG==='ar'?'تخطي ›':'Skip ›';
   setTimeout(function(){ if(DK.on&&!DK.fin) dkMsg(LANG==='ar'?'اتبعي النور ♥':'Follow the light ♥',3600); },2800);
   return true;
@@ -1735,7 +1747,7 @@ $('darkSkip').addEventListener('click',function(){ if(DK.on) dkFinale(true); });
 function dkEnd(){
   DK.on=false; DKU.S.x=0; DKU.S.w=0; dkBeam.visible=false; dkRing.visible=false;
   document.body.classList.remove('dk'); $('darkSkip').hidden=true; $('darkHearts').hidden=true;
-  tags.npc.el.classList.remove('dkHide'); refreshTourButton();
+  tags.npc.el.classList.remove('dkHide'); refreshTourButton(); if(ROLE==='guest') send({t:'dk',v:0});
 }
 /* runs every frame just before the scene is drawn */
 function dkTick(dt,now){
@@ -1891,7 +1903,7 @@ function startExplore(){
   initAudio(); startMusic(); setMuted(muted); setSfxMuted(sfxMuted); chime([67,72,76],.2,.12);
   if(isTouch){ stick.hidden=false; hint.textContent=t('hintT'); } else hint.textContent=t('hintD');
   setTimeout(function(){ hint.style.opacity='0'; },9000);
-  if(!ROLE){ dkStart(); }
+  if(!ROLE||(ROLE==='guest'&&DARK_INV)){ dkStart(); }
 }
 function startCine(){ finishMuseumTour(false); liveEv('cine'); player.userData.rate=1; state='cinematic'; refreshTourButton(); cine.stage=0; cine.t=0; cine.k=0; cine.shock=false; stick.hidden=true; $('capPill').hidden=true; hint.style.opacity='0'; $('exitPill').hidden=true; setNear(-1); }
 function updateCine(dt){
@@ -2428,8 +2440,8 @@ $('shFile').addEventListener('click',function(){
 
 
 /* ---------- Live mode: peer-to-peer, one private invitation ---------- */
-var LT={en:{inv:'💌 Invite her live',copy:'Copy invitation',wait:'Waiting for her to open the link…',here:'She is here 💕',hereG:'He is here 💕',conn:'Finding him…',off:'He has not opened his side yet. Retrying…',taken:'This invitation belongs to someone else.',say:'Say something…',send:'Send',once:'One-time link: only the first person who opens it can join.',host:'Host this page on a web address first, otherwise the link will not open for her.',waitAsk:'Waiting for her answer…',copied:'Copied',fail:'Could not reach the connection service.',ring:'💍 Present the ring',ringHint:'press 💍 whenever you are ready'},
-ar:{inv:'💌 ادعيها تدخل معاك',copy:'انسخ الدعوة',wait:'مستنيينها تفتح اللينك…',here:'هي هنا 💕',hereG:'هو هنا 💕',conn:'بدوّر عليه…',off:'لسه ما فتحش من عنده. هحاول تاني…',taken:'الدعوة دي لحد تاني.',say:'اكتب حاجة…',send:'ابعت',once:'لينك لمرة واحدة: أول واحدة تفتحه بس هي اللي تدخل.',host:'انشر الصفحة على عنوان على النت الأول، وإلا اللينك مش هيفتح عندها.',waitAsk:'مستنيين إجابتها…',copied:'اتنسخ',fail:'مقدرناش نوصل لخدمة الاتصال.',ring:'💍 قدّم الخاتم',ringHint:'اضغط 💍 في أي وقت تحب'}};
+var LT={en:{inv:'💌 Invite her live',copy:'Copy invitation',wait:'Waiting for her to open the link…',here:'She is here 💕',hereG:'He is here 💕',conn:'Finding him…',off:'He has not opened his side yet. Retrying…',taken:'This invitation belongs to someone else.',say:'Say something…',send:'Send',once:'One-time link: only the first person who opens it can join.',host:'Host this page on a web address first, otherwise the link will not open for her.',waitAsk:'Waiting for her answer…',copied:'Copied',fail:'Could not reach the connection service.',ring:'💍 Present the ring',ringHint:'press 💍 whenever you are ready',dark:'🌙 Dark entrance for her',dkOn:'She is walking in the dark, lighting the memories ✨',dkOff:'She lit every memory 💕 · press 💍 when ready',dkWait:'Let her finish lighting the memories first ✨'},
+ar:{inv:'💌 ادعيها تدخل معاك',copy:'انسخ الدعوة',wait:'مستنيينها تفتح اللينك…',here:'هي هنا 💕',hereG:'هو هنا 💕',conn:'بدوّر عليه…',off:'لسه ما فتحش من عنده. هحاول تاني…',taken:'الدعوة دي لحد تاني.',say:'اكتب حاجة…',send:'ابعت',once:'لينك لمرة واحدة: أول واحدة تفتحه بس هي اللي تدخل.',host:'انشر الصفحة على عنوان على النت الأول، وإلا اللينك مش هيفتح عندها.',waitAsk:'مستنيين إجابتها…',copied:'اتنسخ',fail:'مقدرناش نوصل لخدمة الاتصال.',ring:'💍 قدّم الخاتم',ringHint:'اضغط 💍 في أي وقت تحب',dark:'🌙 دخول مظلم ليها',dkOn:'هي ماشية في الضلمة وبتنوّر الذكريات ✨',dkOff:'نوّرت كل الذكريات 💕 · اضغط 💍 لما تحب',dkWait:'استنى لما تخلّص تنوّر الذكريات ✨'}};
 function lt(k){ return (LT[LANG]&&LT[LANG][k])||LT.en[k]; }
 var peer=null, conn=null, linked=false, denied=false, lockCid=null, rem={got:false,x:0,z:0,r:0,m:0,y:0,sy:0,c:0}, lastSend=0, hostK=0;
 var ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]};
@@ -2438,7 +2450,7 @@ function rnd(n){ var a=new Uint8Array(n),o=''; (window.crypto||window.msCrypto).
 function hexTok(n){ var a=new Uint8Array(n),o=''; crypto.getRandomValues(a); for(var i=0;i<n;i++) o+=('0'+a[i].toString(16)).slice(-2); return o; }
 function loadPeer(cb){ if(window.Peer) return cb(); var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; sc.onload=cb; sc.onerror=function(){ toast(lt('fail'),4000); }; document.head.appendChild(sc); }
 function send(o){ try{ if(conn&&conn.open) conn.send(o); }catch(e){} }
-var ringBusy=false, ringShown=null;
+var ringBusy=false, ringShown=null, herDark=false;
 function fadeThen(cb,hold){ var f=$('fade'); f.style.opacity='1'; setTimeout(function(){ try{ cb(); }catch(e){} setTimeout(function(){ f.style.opacity='0'; },hold||200); },600); }
 function hostEnterCine(){
   ringBusy=false; if(state==='hostcine') return;
@@ -2462,9 +2474,10 @@ function swapAvatars(){
   player.position.set(1.4,0,3.4); player.rotation.y=Math.PI; npc.position.set(-1.4,0,3); npc.rotation.y=Math.PI;
   tags.me.av=player; tags.npc.av=npc; tags.me.label.textContent=C('from'); tags.npc.label.textContent=C('to');
 }
-function onLinked(){ linked=true; flags.l3=flags.l4=true; toast(ROLE==='host'?lt('here')+' · '+lt('ringHint'):lt('hereG'),ROLE==='host'?5000:3000); chime([76,81],.12,.15); roomsLinked(); $('liveChat').hidden=false; $('lcIn').placeholder=lt('say'); $('lcGo').textContent=lt('send'); if(ROLE==='host') $('invSt').textContent=lt('here'); }
+function onLinked(){ linked=true; flags.l3=flags.l4=true; herDark=false; if(ROLE==='guest'&&DK.on&&!DK.fin) send({t:'dk',v:1}); toast(ROLE==='host'?lt('here')+' · '+lt('ringHint'):lt('hereG'),ROLE==='host'?5000:3000); chime([76,81],.12,.15); roomsLinked(); $('liveChat').hidden=false; $('lcIn').placeholder=lt('say'); $('lcGo').textContent=lt('send'); if(ROLE==='host') $('invSt').textContent=lt('here'); }
 function onMsg(d){
   if(!d||!d.t) return;
+  if(d.t==='dk'){ if(ROLE==='host'){ herDark=!!d.v; toast(herDark?lt('dkOn'):lt('dkOff'),4200); if(!herDark) chime([76,81,88],.12,.15); } return; }
   if(d.t==='p'){ if(!rem.got){ rem.got=true; npc.position.set(d.x,0,d.z); } rem.x=d.x; rem.z=d.z; rem.r=d.r; rem.m=d.m; rem.y=d.y||0; rem.c=d.c||0; var sitNow=d.s?1:0; if((rem.s||0)!==sitNow) playReactSound('sit'); rem.s=sitNow; }
   else if(d.t==='say'){ say('npc',String(d.s).slice(0,80),3500); }
   else if(d.t==='emo'){ if(typeof d.e==='string'&&RDUR[d.e]){ npcR={n:d.e,t:0,d:RDUR[d.e]}; playReactSound(d.e,true); } }
@@ -2487,15 +2500,19 @@ function tkDate(){ try{ $('tkDate').textContent=new Date().toLocaleDateString(LA
 tkDate(); $('langBtn').addEventListener('click',tkDate);
 $('askBack').addEventListener('click',function(){ fwStart(); });
 $('tRing').textContent=lt('ring');
-$('tRing').addEventListener('click',function(){ if(ROLE!=='host'||!linked||state!=='explore'||ringBusy) return; ringBusy=true; send({t:'ring'}); closeLightbox(); fadeThen(hostEnterCine,750); });
+$('tRing').addEventListener('click',function(){ if(ROLE!=='host'||!linked||state!=='explore'||ringBusy) return; if(herDark){ toast(lt('dkWait'),3200); return; } ringBusy=true; send({t:'ring'}); closeLightbox(); fadeThen(hostEnterCine,750); });
 /* he opens an invitation */
+var invBase='';
+function invLinkSet(){ if(invBase) $('invLink').value=invBase+($('invDark').checked?'&dark=1':''); }
+$('invDark').addEventListener('change',invLinkSet);
+$('invDarkTxt').textContent=lt('dark');
 $('inviteBtn').textContent=lt('inv'); if(JOIN) $('inviteBtn').hidden=true;
 $('inviteBtn').addEventListener('click',function(){
   if(ROLE) return; ROLE='host'; swapAvatars(); $('inviteBtn').hidden=true; $('customize').hidden=true;
   var box=$('invite'); box.hidden=false; $('invCopy').textContent=lt('copy'); $('invSt').textContent='…'; $('invNote').textContent=lt('once')+(location.protocol==='file:'?' '+lt('host'):'');
   loadPeer(function(){
     var id='om-'+rnd(12), tok=hexTok(8); peer=new Peer(id,{config:ICE});
-    peer.on('open',function(){ var h=location.hash.split('&')[0]; $('invLink').value=location.href.split('#')[0]+(/^#m=/.test(h)?h+'&':'#')+'join='+id+'.'+tok; $('invSt').textContent=lt('wait'); });
+    peer.on('open',function(){ var h=location.hash.split('&')[0]; invBase=location.href.split('#')[0]+(/^#m=/.test(h)?h+'&':'#')+'join='+id+'.'+tok; invLinkSet(); $('invSt').textContent=lt('wait'); });
     peer.on('error',function(){ $('invSt').textContent=lt('fail'); });
     peer.on('connection',function(c){
       c.on('data',function(d){
@@ -2509,7 +2526,7 @@ $('inviteBtn').addEventListener('click',function(){
     });
   });
 });
-$('langBtn').addEventListener('click',function(){ $('tRing').textContent=lt('ring'); $('inviteBtn').textContent=lt('inv'); $('invCopy').textContent=lt('copy'); $('lcIn').placeholder=lt('say'); $('lcGo').textContent=lt('send'); });
+$('langBtn').addEventListener('click',function(){ $('tRing').textContent=lt('ring'); $('inviteBtn').textContent=lt('inv'); $('invDarkTxt').textContent=lt('dark'); $('invCopy').textContent=lt('copy'); $('lcIn').placeholder=lt('say'); $('lcGo').textContent=lt('send'); });
 $('invCopy').addEventListener('click',function(){ var v=$('invLink').value; if(!v) return; if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(function(){ toast(lt('copied')); },function(){ window.prompt('Link',v); }); else window.prompt('Link',v); });
 
 /* she opens it */
@@ -3130,6 +3147,24 @@ function enterGarden(){ if(gardenOn) return; gardenOn=true; document.body.classL
   var T=LIGHTS[lightMode]; T.amb=.62; T.ambC=0xffd9e4; T.hemi=.55; hemi.color.set(0xffc4d8); hemi.groundColor.set(0x6a4a6a);
   camPos.set(2.9,1.05,-34.8); camLook.set(0,1.15,-36.5); }
 
+/* ---------- A little plane pulling an "I love you" banner across the sunset sky ---------- */
+var PLANE_SVG='<svg viewBox="0 0 124 62" aria-hidden="true"><path d="M2 30 L14 30" stroke="#fff6f0" stroke-width="2"/><polygon points="14,31 26,9 36,9 33,31" fill="#ff8da5"/><ellipse cx="66" cy="35" rx="44" ry="13" fill="#fff6f0"/><path d="M22 35 Q66 20 108 33 L108 38 Q66 50 22 40Z" fill="#ffe3ea" opacity=".9"/><path d="M96 25 Q112 26 110 36 Q108 44 96 45Z" fill="#e8506b"/><rect x="44" y="26" width="30" height="3" rx="1.5" fill="#e8506b"/><ellipse cx="82" cy="29" rx="9" ry="6" fill="#bfe3ff" stroke="#fff" stroke-width="1.5"/><path d="M52 37 L78 37 L92 54 L62 54Z" fill="#ff8da5"/><path d="M50 30 L74 30 L66 12 L52 12Z" fill="#ffb3c4" opacity=".85"/><g class="prop"><ellipse cx="108" cy="34" rx="2.6" ry="15" fill="#c2284a" opacity=".85"/></g><circle cx="108" cy="34" r="3.2" fill="#ffd6df"/></svg>';
+var planeBusy=false;
+function launchPlane(){
+  var host=$('loveFlight'); if(!host||planeBusy||!gardenOn) return; planeBusy=true;
+  var el=document.createElement('div'); el.className='fl';
+  var cloth=document.createElement('div'); cloth.className='cloth'; cloth.textContent=LANG==='ar'?'بحبك \u2665':'I love you \u2665';
+  var rope=document.createElement('div'); rope.className='rope';
+  var pl=document.createElement('div'); pl.innerHTML=PLANE_SVG; pl.style.display='flex';
+  el.appendChild(cloth); el.appendChild(rope); el.appendChild(pl); host.appendChild(el);
+  var W=host.clientWidth||innerWidth, dur=Math.max(9000,Math.min(15000,W*9));
+  var fly=el.animate([{transform:'translate3d(-100%,0,0)'},{transform:'translate3d('+W+'px,0,0)'}],{duration:dur,easing:'linear',fill:'forwards'});
+  var bob=el.firstChild.animate([{transform:'translateY(0)'},{transform:'translateY(-9px)'},{transform:'translateY(0)'}],{duration:2600,iterations:Infinity,easing:'ease-in-out'});
+  playReal('whoosh',.18);
+  fly.onfinish=function(){ bob.cancel(); el.remove(); planeBusy=false; };
+}
+function startPlanes(){ setTimeout(launchPlane,2200); setInterval(function(){ if(state==='accepted'||state==='done') launchPlane(); },16000); }
+
 function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,now); updateFlowerAvailability(); if(npcR&&state==='explore') applyReact(npc,npcR,dt,false);
   emEl.hidden=!(state==='explore'&&!hud.hidden);
   if(seat&&(keys.up||keys.down||keys.left||keys.right||Math.hypot(joy.x,joy.y)>.25)) standUp();
@@ -3143,7 +3178,7 @@ function fxUpdate(dt,now,moving){ var s=now*.001; obsTick(s,dt); roomsTick(dt,no
     gPetals.forEach(function(p){ var d=p.userData; p.position.y-=d.v*dt; p.position.x+=Math.sin(s*d.f+d.ph)*.6*dt; p.rotation.z+=dt*d.f; p.rotation.x+=dt*.7; if(p.position.y<0) p.position.y=7; });
     gLan.forEach(function(l,i){ l.position.y+=.22*dt; l.position.x+=Math.sin(s*.3+i)*.2*dt; if(l.position.y>22) l.position.y=4; });
     gSea.material.map.offset.x=(s*.01)%1; gFoam.material.opacity=.35+.25*Math.sin(s*1.3);
-    if(state==='accepted'&&!fxYes){ fxYes=1; emote('me','💕'); setTimeout(function(){ emote('npc','💕'); },700); setInterval(function(){ if(state==='accepted'||state==='done') heartsAt(0,1.6,-36.6,4,1.6); },900); } }
+    if(state==='accepted'&&!fxYes){ fxYes=1; startPlanes(); emote('me','💕'); setTimeout(function(){ emote('npc','💕'); },700); setInterval(function(){ if(state==='accepted'||state==='done') heartsAt(0,1.6,-36.6,4,1.6); },900); } }
   if(!gardenOn||state!=='explore'){} fxAcc+=dt;
   var sp2=Math.hypot(vx,vz); if(moving&&state==='explore'&&!seat&&sp2>3.4&&fxAcc>.045){ fxAcc=0; var pp=player.position, dx=-vx/sp2, dz=-vz/sp2, sd=(Math.random()<.5?-1:1)*.12; for(var q=0;q<2;q++) emit(DUSTT,false,pp.x+dx*(.22+Math.random()*.25)-dz*sd,.05+Math.random()*.1,pp.z+dz*(.22+Math.random()*.25)+dx*sd,.22+Math.random()*.22,.7+Math.random()*.5,.18+Math.random()*.15,dx*.4+(Math.random()-.5)*.3); }
   pool.forEach(function(sp){ var d=sp.userData; if(d.t>=d.l) return; d.t+=dt; var k=d.t/d.l; if(k>=1){ sp.visible=false; sp.material.opacity=0; return; } sp.position.y+=d.vy*dt; sp.position.x+=d.vx*dt; sp.scale.setScalar(d.sc*(1+.4*k)); sp.material.opacity=Math.min(1,k*8)*(1-k); });
