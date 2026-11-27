@@ -158,9 +158,9 @@ function drawPlaque(i){
   SLOTS.forEach(function(s,i){
     var g=new THREE.Group(); g.position.set(s.x,FY,s.z); g.rotation.y=s.ry;
     g.add(new THREE.Mesh(new THREE.BoxGeometry(FW+.26,FH+.26,.08),woodMat));
-    var matte=new THREE.Mesh(new THREE.PlaneGeometry(FW+.2,FH+.2),matteMat); matte.position.z=.045; g.add(matte);
+    var matte=new THREE.Mesh(new THREE.PlaneGeometry(FW+.2,FH+.2),matteMat); matte.position.z=.05; g.add(matte);
     var c=document.createElement('canvas'); c.width=750; c.height=Math.round(750*FH/FW); var tx=canvasTex(c);
-    var photo=new THREE.Mesh(new THREE.PlaneGeometry(FW,FH),new THREE.MeshBasicMaterial({map:tx})); photo.position.z=.05; photo.userData.index=i; g.add(photo); photoMeshes.push(photo);
+    var photo=new THREE.Mesh(new THREE.PlaneGeometry(FW,FH),new THREE.MeshBasicMaterial({map:tx})); photo.position.z=.062; photo.userData.index=i; g.add(photo); photoMeshes.push(photo);
     var pc=document.createElement('canvas'); pc.width=560; pc.height=130; var ptx=canvasTex(pc);
     var plaque=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.35),new THREE.MeshBasicMaterial({map:ptx})); plaque.position.set(0,-FH/2-.42,.02); g.add(plaque);
     scene.add(g);
@@ -168,13 +168,13 @@ function drawPlaque(i){
     var wash=new THREE.Mesh(new THREE.PlaneGeometry(3.6,4.6),additive(washTex)); wash.position.set(s.x+side*.03,FY,s.z); wash.rotation.y=s.ry; wash.renderOrder=1; scene.add(wash);
     var pool=new THREE.Mesh(new THREE.PlaneGeometry(6,7.5),additive(poolTex)); pool.visible=false;
     var cc2=document.createElement('canvas'); cc2.width=500; cc2.height=Math.round(500*(FH+.32)/(FW+.32)); var ctx2=canvasTex(cc2);
-    var cover=new THREE.Mesh(new THREE.PlaneGeometry(FW+.2,FH+.2),new THREE.MeshBasicMaterial({map:ctx2,transparent:true})); cover.position.z=.06; g.add(cover);
+    var cover=new THREE.Mesh(new THREE.PlaneGeometry(FW+.2,FH+.2),new THREE.MeshBasicMaterial({map:ctx2,transparent:true})); cover.position.z=.086; g.add(cover);
     var cw=FW+.2, ch=FH+.2;
-    var sheenP=sheenPlane(cw,ch,.054,.8); g.add(sheenP);
-    var sheenC=sheenPlane(cw,ch,.064,1); g.add(sheenC);
+    var sheenP=sheenPlane(cw,ch,.074,.8); g.add(sheenP);
+    var sheenC=sheenPlane(cw,ch,.098,1); g.add(sheenC);
     var sweep=new THREE.Mesh(new THREE.PlaneGeometry(.42,ch),new THREE.MeshBasicMaterial({map:sweepTex,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
-    sweep.position.set(-1.05,0,.072); sweep.renderOrder=3; g.add(sweep);
-    var doors=new THREE.Group(); doors.position.z=.06; doors.visible=false; g.add(doors);
+    sweep.position.set(-1.05,0,.11); sweep.renderOrder=3; g.add(sweep);
+    var doors=new THREE.Group(); doors.position.z=.086; doors.visible=false; g.add(doors);
     var doorMat=new THREE.MeshBasicMaterial({map:ctx2,transparent:true,side:THREE.DoubleSide});
     var doorL=new THREE.Group(); doorL.position.x=-cw/2; var dml=new THREE.Mesh(halfGeo(cw,ch,false),doorMat); dml.position.x=cw/4; doorL.add(dml);
     var doorR=new THREE.Group(); doorR.position.x=cw/2; var dmr=new THREE.Mesh(halfGeo(cw,ch,true),doorMat); dmr.position.x=-cw/4; doorR.add(dmr);

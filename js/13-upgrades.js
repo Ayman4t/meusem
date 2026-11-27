@@ -35,7 +35,7 @@ var rugT=gTex(256,512,function(x,w,h){ x.fillStyle='#7a2840'; x.fillRect(0,0,w,h
   for(var i=0;i<4;i++){ var cy=i*128+64; x.fillStyle='rgba(232,192,122,.9)'; x.beginPath(); x.moveTo(w/2,cy-46); x.lineTo(w/2+36,cy); x.lineTo(w/2,cy+46); x.lineTo(w/2-36,cy); x.closePath(); x.fill(); x.fillStyle='#d94a6a'; heartPath(x,w/2,cy+3,20); x.fill();
     [-72,72].forEach(function(dx){ x.fillStyle='rgba(255,200,215,.85)'; x.beginPath(); x.arc(w/2+dx,cy,9,0,6.3); x.fill(); x.fillStyle='#e8c07a'; x.beginPath(); x.arc(w/2+dx,cy,3.5,0,6.3); x.fill(); }); } });
 rugT.wrapS=rugT.wrapT=THREE.RepeatWrapping; rugT.repeat.set(1,(L-1.5)/10);
-var rug=new THREE.Mesh(new THREE.PlaneGeometry(4.8,L-1.5),new THREE.MeshStandardMaterial({map:rugT,roughness:1})); rug.rotation.x=-Math.PI/2; rug.position.set(0,.018,ZC);
+var rug=new THREE.Mesh(new THREE.PlaneGeometry(4.8,L-1.5),new THREE.MeshStandardMaterial({map:rugT,roughness:1,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3})); rug.rotation.x=-Math.PI/2; rug.position.set(0,.018,ZC);
 var skyW=gTex(128,256,function(x,w,h){ var g=x.createLinearGradient(0,0,0,h); [[0,'#2a1a5e'],[.35,'#8a3b8f'],[.62,'#ee6f8e'],[.8,'#ffb27a'],[1,'#ffe1a0']].forEach(function(s){ g.addColorStop(s[0],s[1]); }); x.fillStyle=g; x.fillRect(0,0,w,h); x.fillStyle='rgba(255,240,200,.95)'; x.beginPath(); x.arc(w*.5,h*.8,16,0,6.3); x.fill(); x.fillStyle='rgba(255,200,210,.45)'; x.fillRect(0,h*.55,w,5); x.fillRect(10,h*.66,w*.7,4); x.fillStyle='#3b2a5a'; x.fillRect(0,h*.9,w,h*.1); });
 var skyM=new THREE.MeshBasicMaterial({map:skyW}), spillT=radialTex('rgba(255,150,140,.45)','rgba(255,150,140,0)');
 function win(side,z){ var g=new THREE.Group(); g.position.set(side*(W/2-.03),3.6,z); g.rotation.y=side<0?Math.PI/2:-Math.PI/2; scene.add(g);
