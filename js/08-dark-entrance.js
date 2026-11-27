@@ -55,8 +55,8 @@ function dkNext(){
 }
 function dkFinale(skipped){
   if(DK.fin) return; DK.fin=true; DK.finT=0; DK.target=-1;
-  DK.fadeDur=skipped?1.2:3.2;
-  for(var i=0;i<8;i++){ DK.lit[i]=true; DK.k[i]=Math.max(DK.k[i],1); }
+  DK.fadeDur=skipped?2.6:3.2;
+  DK.k0=[]; for(var i=0;i<8;i++){ DK.k0[i]=DK.lit[i]?1:DK.k[i]; DK.lit[i]=true; }  /* lights ease on together with the room instead of popping on in one frame */
   dkHearts(); tags.npc.el.classList.remove('dkHide');
   chime([72,76,79,84,88],.14,.13); playReal('whoosh',.35); if(!skipped) playReal('tada',.3);
   dkMsg(LANG==='ar'?'كل ذكرى منورة عشانك ♥':'Every memory, lit for you ♥',3600);
@@ -106,7 +106,7 @@ function dkTick(dt,now){
   camera.updateMatrixWorld(); DKU.C.setFromMatrixPosition(camera.matrixWorld); DKU.R.setFromMatrix4(camera.matrixWorld);
   DKU.S.x=1; DKU.P.set(pp.x,0,pp.z,2.3);
   for(var n=0;n<8;n++){
-    var fr=galleryFrames[n], side=fr.x<0?1:-1, k=DK.lit[n]?1:DK.k[n]*(.94+.06*Math.sin(now*.003));
+    var fr=galleryFrames[n], side=fr.x<0?1:-1, k=DK.fin?(DK.k0[n]+(1-DK.k0[n])*ease(clampN(DK.finT/(DK.fadeDur*.8),0,1))):(DK.lit[n]?1:DK.k[n]*(.94+.06*Math.sin(now*.003)));
     DKU.A[n].set(fr.x+side*.9,2.1,fr.z,3.7*k*(1+.45*DK.burst[n]));
   }
   for(var m=0;m<10;m++){ var tp=DK.trail[m]; if(tp) DKU.T[m].set(tp.x,0,tp.z,1.5*tp.a); else DKU.T[m].w=0; }
