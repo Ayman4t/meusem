@@ -914,13 +914,25 @@ var stripMat=new THREE.MeshBasicMaterial({color:0xfff1dc});
     blob(RW+.7,RL+.7,0,m.position.z,.28); })();
   /* potted plants along both walls */
   var potM=new THREE.MeshStandardMaterial({color:0xb5654a,roughness:.8}), soilM=new THREE.MeshStandardMaterial({color:0x2a1c16,roughness:1});
-  var leafA=new THREE.MeshStandardMaterial({color:0x3f7a4e,roughness:.8}), leafB=new THREE.MeshStandardMaterial({color:0x5c9a63,roughness:.8});
+  var leafA=new THREE.MeshStandardMaterial({color:0x3f7a4e,roughness:.75,side:THREE.DoubleSide}), leafB=new THREE.MeshStandardMaterial({color:0x5c9a63,roughness:.75,side:THREE.DoubleSide});
+  var stemM=new THREE.MeshStandardMaterial({color:0x3a6b43,roughness:.8}), leafC=new THREE.MeshStandardMaterial({color:0x6aa86f,roughness:.75,side:THREE.DoubleSide});
+  var UP=new THREE.Vector3(0,1,0);
   function plant(x,z,sc){ var g=new THREE.Group();
-    var pot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.25,.6,16),potM); pot.position.y=.3; g.add(pot);
-    var rim=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,20),potM); rim.rotation.x=Math.PI/2; rim.position.y=.6; g.add(rim);
-    var soil=new THREE.Mesh(new THREE.CircleGeometry(.32,16),soilM); soil.rotation.x=-Math.PI/2; soil.position.y=.6; g.add(soil);
-    for(var i=0;i<11;i++){ var a=i/11*Math.PI*2+Math.random()*.4, h=.9+Math.random()*.9, lf=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),i%2?leafA:leafB); lf.scale.set(.55,1.5+Math.random()*.9,.28); lf.position.set(Math.cos(a)*.2,.6+h*.55,Math.sin(a)*.2); lf.rotation.set(Math.sin(a)*.5,-a,-Math.cos(a)*.5); g.add(lf); }
-    g.position.set(x,0,z); g.scale.setScalar(sc||1); scene.add(g); blob(1.4*(sc||1),1.4*(sc||1),x,z,.3); }
+    /* pot: tapered body, lip and soil sitting just below the lip */
+    var pot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.25,.6,20),potM); pot.position.y=.3; g.add(pot);
+    var rim=new THREE.Mesh(new THREE.CylinderGeometry(.37,.34,.09,20),potM); rim.position.y=.62; g.add(rim);
+    var soil=new THREE.Mesh(new THREE.CylinderGeometry(.31,.31,.05,20),soilM); soil.position.y=.6; g.add(soil);
+    /* every leaf grows on a stem that starts inside the soil, so nothing floats */
+    var N=14;
+    for(var i=0;i<N;i++){
+      var a=i/N*Math.PI*2+Math.random()*.5, tilt=.12+Math.random()*.6+(i%3===0?.25:0), stemLen=.35+Math.random()*.55, leafLen=.46+Math.random()*.22;
+      var d=new THREE.Vector3(Math.sin(tilt)*Math.cos(a),Math.cos(tilt),Math.sin(tilt)*Math.sin(a)).normalize();
+      var b=new THREE.Vector3(Math.cos(a)*.07,.58,Math.sin(a)*.07), tip=b.clone().add(d.clone().multiplyScalar(stemLen));
+      var st=new THREE.Mesh(new THREE.CylinderGeometry(.012,.02,stemLen,6),stemM); st.position.copy(b).add(d.clone().multiplyScalar(stemLen/2)); st.quaternion.setFromUnitVectors(UP,d); g.add(st);
+      var lf=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),i%2?leafA:leafB); lf.scale.set(.15,leafLen/2,.04);
+      lf.position.copy(tip).add(d.clone().multiplyScalar(leafLen/2*.92)); lf.quaternion.setFromUnitVectors(UP,d); lf.rotateY(Math.random()*Math.PI); g.add(lf);
+    }
+    g.position.set(x,0,z); g.rotation.y=Math.random()*6.28; g.scale.setScalar(sc||1); scene.add(g); blob(1.4*(sc||1),1.4*(sc||1),x,z,.3); }
   [8.2,-7.5,-20.5,-31,-39.5].forEach(function(z,i){ plant(-(W/2-1.1),z,1+(i%2)*.18); plant(W/2-1.1,z,1.12-(i%2)*.14); });
   /* shadows under the benches */
   [-3,-12,-21,-30].forEach(function(z){ [-1,1].forEach(function(sd){ blob(1.7,4.4,sd*9.8,z,.3); }); });
